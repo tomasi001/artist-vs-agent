@@ -2,7 +2,7 @@
 <html lang="en-GB">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>Artist vs Agent — Day 6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -12,22 +12,25 @@
 :root{
   --f:'Inter',system-ui,sans-serif;
   --m:'JetBrains Mono',monospace;
-  --human:#ff1a5e;
-  --ai:#00d4ff;
-  --fire:#ff3300;
-  --gold:#ffbb00;
+  --human:#ff1a5e;--ai:#00d4ff;--fire:#ff3300;--gold:#ffbb00;
 }
-html,body{font-family:var(--f);background:#020204;color:#fff;overflow:hidden;width:100%;height:100%;-webkit-font-smoothing:antialiased}
-canvas#gl{position:fixed;inset:0;z-index:1}
+html,body{font-family:var(--f);background:#000;color:#fff;overflow:hidden;width:100%;height:100%;-webkit-font-smoothing:antialiased}
 
-/* Text — massive, front and centre, ON TOP of the 3D */
+/* ═══ 9:16 FRAME — all content lives inside this ═══ */
+#frame{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  overflow:hidden;background:#020204;
+}
+canvas#gl{position:absolute;inset:0;width:100%;height:100%}
+
+/* Text overlay */
 #txt{
-  position:fixed;inset:0;z-index:10;
+  position:absolute;inset:0;z-index:10;
   display:flex;align-items:center;justify-content:center;
-  flex-direction:column;pointer-events:none;padding:0 5vw;
+  flex-direction:column;pointer-events:none;padding:0 6vw;
 }
 #t{
-  font-weight:100;font-size:clamp(2.4rem,7vw,6.5rem);
+  font-weight:100;font-size:clamp(2rem,8vw,5.5rem);
   line-height:1.0;letter-spacing:-0.05em;text-align:center;
   opacity:0;transform:scale(0.92);
   transition:opacity 0.25s ease,transform 0.25s ease;
@@ -44,61 +47,69 @@ canvas#gl{position:fixed;inset:0;z-index:1}
 #t .i{font-style:italic;font-weight:200;opacity:0.7}
 #t .mono{font-family:var(--m);letter-spacing:0.04em}
 #sub{
-  font-weight:300;font-size:clamp(0.8rem,1.5vw,1.1rem);
-  color:rgba(255,255,255,0.3);margin-top:10px;text-align:center;
+  font-weight:300;font-size:clamp(0.7rem,2vw,1rem);
+  color:rgba(255,255,255,0.3);margin-top:8px;text-align:center;
   opacity:0;transition:opacity 0.3s ease 0.1s;letter-spacing:0.03em;
 }
 #sub.on{opacity:1}
 
-/* VS — screen-filling flash */
+/* VS flash */
 #vs{
-  position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
+  position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
   pointer-events:none;opacity:0;
   background:radial-gradient(circle,rgba(255,26,94,0.15),transparent 70%);
 }
 #vs span{
-  font-family:var(--m);font-weight:900;font-size:clamp(8rem,25vw,20rem);
+  font-family:var(--m);font-weight:900;font-size:clamp(8rem,30vw,18rem);
   background:linear-gradient(135deg,var(--human),var(--fire));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  filter:drop-shadow(0 0 120px rgba(255,26,94,0.7));
+  filter:drop-shadow(0 0 80px rgba(255,26,94,0.7));
 }
 
 /* HUD */
 #hud{
-  position:fixed;bottom:40px;left:50%;transform:translateX(-50%);
-  z-index:12;pointer-events:none;display:flex;gap:28px;
+  position:absolute;bottom:60px;left:50%;transform:translateX(-50%);
+  z-index:12;pointer-events:none;display:flex;gap:20px;
   opacity:0;transition:opacity 0.3s ease;
 }
 #hud.on{opacity:1}
 .ch{text-align:center}
-.ch-n{font-family:var(--m);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px}
-.br{width:80px;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin:3px 0}
+.ch-n{font-family:var(--m);font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:6px}
+.br{width:60px;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin:2px 0}
 .br-i{height:100%;border-radius:2px;width:0%;transition:width 0.8s cubic-bezier(.22,1,.36,1)}
 .br-i.h{background:var(--human)}.br-i.ai{background:var(--ai)}
 
 /* CTA */
-#cta{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);z-index:14;text-align:center;opacity:0;transition:opacity 0.4s ease;pointer-events:auto}
+#cta{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);z-index:14;text-align:center;opacity:0;transition:opacity 0.4s ease;pointer-events:auto}
 #cta.on{opacity:1}
-#cta p{font-weight:300;font-size:0.9rem;color:rgba(255,255,255,0.45);margin-bottom:12px}
-#cta button{background:none;border:1px solid var(--ai);color:var(--ai);padding:10px 32px;border-radius:3px;font-family:var(--f);font-size:12px;font-weight:400;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+#cta p{font-weight:300;font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:10px}
+#cta button{background:none;border:1px solid var(--ai);color:var(--ai);padding:8px 24px;border-radius:3px;font-family:var(--f);font-size:11px;font-weight:400;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
 #cta button:hover{background:var(--ai);color:#020204}
 
 /* Progress */
-#prog{position:fixed;bottom:0;left:0;width:100%;height:2px;z-index:20;background:rgba(255,255,255,0.02)}
+#prog{position:absolute;bottom:0;left:0;width:100%;height:2px;z-index:20;background:rgba(255,255,255,0.02)}
 #prog-f{height:100%;width:0%;background:linear-gradient(90deg,var(--human),var(--ai));transition:width 0.15s linear}
 
 /* Start */
-#go{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#020204;cursor:pointer;transition:opacity 0.5s}
+#go{position:absolute;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#020204;cursor:pointer;transition:opacity 0.5s}
 #go.off{opacity:0;pointer-events:none}
-#go .day{font-family:var(--m);font-weight:700;font-size:11px;color:var(--fire);letter-spacing:0.25em;text-transform:uppercase;margin-bottom:10px}
-#go h1{font-weight:100;font-size:clamp(2rem,5vw,4rem);letter-spacing:-0.04em}
-#go .p{font-weight:300;font-size:12px;color:rgba(255,255,255,0.25);letter-spacing:0.12em;text-transform:uppercase;margin-top:18px;animation:br 2s ease-in-out infinite}
+#go .day{font-family:var(--m);font-weight:700;font-size:10px;color:var(--fire);letter-spacing:0.25em;text-transform:uppercase;margin-bottom:8px}
+#go h1{font-weight:100;font-size:clamp(1.8rem,6vw,3.5rem);letter-spacing:-0.04em}
+#go .p{font-weight:300;font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:0.12em;text-transform:uppercase;margin-top:14px;animation:br 2s ease-in-out infinite}
 @keyframes br{0%,100%{opacity:0.25}50%{opacity:0.7}}
+
+/* Replay */
+#replay{position:absolute;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;flex-direction:column;pointer-events:none;opacity:0;transition:opacity 0.5s}
+#replay.on{opacity:1;pointer-events:auto}
+#replay button{background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);padding:10px 28px;border-radius:3px;font-family:var(--f);font-size:11px;font-weight:300;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:12px}
+#replay button:hover{border-color:var(--ai);color:var(--ai)}
+#replay .end{font-weight:100;font-size:clamp(1.2rem,4vw,2.4rem);letter-spacing:-0.03em;text-align:center;opacity:0.5}
 </style>
 </head>
 <body>
-<div id="go"><div class="day">Day 6</div><h1>Artist vs Agent</h1><div class="p">Tap to begin</div></div>
+<div id="frame">
 <canvas id="gl"></canvas>
+<div id="go"><div class="day">Day 6</div><h1>Artist vs Agent</h1><div class="p">Tap to begin</div></div>
 <div id="txt"><div id="t"></div><div id="sub"></div></div>
 <div id="vs"><span>VS</span></div>
 <div id="hud">
@@ -107,9 +118,11 @@ canvas#gl{position:fixed;inset:0;z-index:1}
   <div class="ch"><div class="ch-n">Email</div><div class="br"><div class="br-i h" id="eh"></div></div><div class="br"><div class="br-i ai" id="ea"></div></div></div>
 </div>
 <div id="cta"><p>What metrics prove a brand is actually working?</p><button>Comment your thoughts</button></div>
+<div id="replay"><div class="end">The future has no screen.</div><button id="replayBtn">Watch Again</button></div>
 <div id="prog"><div id="prog-f"></div></div>
+</div>
 
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/"}}</script>
 <script type="module">
 import*as THREE from'three';
 import{EffectComposer}from'three/addons/postprocessing/EffectComposer.js';
@@ -118,31 +131,49 @@ import{UnrealBloomPass}from'three/addons/postprocessing/UnrealBloomPass.js';
 import{ShaderPass}from'three/addons/postprocessing/ShaderPass.js';
 import{OutputPass}from'three/addons/postprocessing/OutputPass.js';
 
-console.log('[AvA] Module loaded');
+console.log('[AvA] Module loaded — Three.js r183');
 
-const W=()=>innerWidth,H=()=>innerHeight;
+const isMobile=navigator.maxTouchPoints>0;
+const dpr=Math.min(devicePixelRatio,isMobile?1.5:2);
+const GEO_DETAIL=isMobile?32:48;
+const P_COUNT=isMobile?5000:8000;
+const frame=document.getElementById('frame');
 
-try {
+/* ═══ 9:16 SIZING ═══ */
+function getFrameSize(){
+  const vw=innerWidth,vh=innerHeight,ratio=9/16;
+  let w,h;
+  if(vw/vh>ratio){h=vh;w=Math.floor(h*ratio);}
+  else{w=vw;h=Math.floor(w/ratio);}
+  if(h>vh){h=vh;w=Math.floor(h*ratio);}
+  return{w,h};
+}
+
+try{
 
 /* ═══ RENDERER ═══ */
 const cv=document.getElementById('gl');
-const R=new THREE.WebGLRenderer({canvas:cv,antialias:true});
-R.setSize(W(),H());R.setPixelRatio(Math.min(devicePixelRatio,2));
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
+R.setPixelRatio(dpr);
 R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.1;
 R.outputColorSpace=THREE.SRGBColorSpace;
 
 const S=new THREE.Scene();
 S.background=new THREE.Color(0x020204);
-const cam=new THREE.PerspectiveCamera(60,W()/H(),0.1,500);
+const cam=new THREE.PerspectiveCamera(60,9/16,0.1,500);
 cam.position.set(0,0,18);
 
-/* ═══ THE ORGANISM — central living form ═══
-   A high-detail sphere with 5-octave FBM vertex displacement.
-   This is the HERO. It fills the screen. It IS the experience.
+const{w:fw,h:fh}=getFrameSize();
+frame.style.width=fw+'px';frame.style.height=fh+'px';
+R.setSize(fw,fh);
+
+/* ═══ ORGANISM — VERTEX SHADER ═══
+   Domain-warped 5-octave FBM with per-mode deformations.
+   This creates flowing, organic displacement — not "a sphere with noise on it".
 */
 const ORG_V=`
-uniform float uTime,uMorph,uFire,uConverge,uExplode,uPulse,uScale;
-varying vec3 vN,vW;varying float vFr,vNoise,vSide;
+uniform float uTime,uMorph,uFire,uConverge,uExplode,uPulse,uScale,uDataVis;
+varying vec3 vN,vW;varying float vFr,vNoise,vSide,vDisp;
 
 vec3 mod289v3(vec3 x){return x-floor(x/289.0)*289.0;}
 vec4 mod289v4(vec4 x){return x-floor(x/289.0)*289.0;}
@@ -155,92 +186,114 @@ float n3(vec3 p){
   vec2 o4=o3.yw*d.x+o3.xz*(1.0-d.x);
   return o4.y*d.y+o4.x*(1.0-d.y);
 }
-float fbm(vec3 p){float v=0.0,a=0.5;for(int i=0;i<5;i++){v+=a*n3(p);p=p*2.1+vec3(1.7,9.2,4.1);a*=0.5;}return v;}
+float fbm5(vec3 p){float v=0.0,a=0.5;for(int i=0;i<5;i++){v+=a*n3(p);p=p*2.1+vec3(1.7,9.2,4.1);a*=0.5;}return v;}
+float fbm3(vec3 p){float v=0.0,a=0.5;for(int i=0;i<3;i++){v+=a*n3(p);p=p*2.1+vec3(1.7,9.2,4.1);a*=0.5;}return v;}
 
 void main(){
   vec3 pos=position*uScale;
-  float n=fbm(pos*1.5+uTime*0.2)*2.0-1.0;
-  float n2=fbm(pos*3.0+uTime*0.4+99.0)*2.0-1.0;
+
+  // Domain warping — feeds noise back as position offset for organic flow
+  vec3 q=vec3(
+    fbm3(pos*1.2+vec3(0.0,0.0,uTime*0.1)),
+    fbm3(pos*1.2+vec3(5.2,1.3,uTime*0.12)),
+    fbm3(pos*1.2+vec3(3.7,8.1,uTime*0.08))
+  );
+  vec3 warped=pos+q*0.8;
+
+  float n=fbm5(warped*1.3+uTime*0.15)*2.0-1.0;
+  float n2=fbm5(warped*2.5+uTime*0.3+99.0)*2.0-1.0;
   vNoise=n;vSide=pos.x;
 
-  // Base organic displacement — LARGE, visible, dramatic
-  float disp=n*1.8+n2*0.6;
+  float disp=n*2.0+n2*0.8;
 
-  // Morph: rip apart into two hemispheres
+  // Morph: rip into hemispheres
   float side=sign(pos.x+0.001);
-  float morphPush=side*uMorph*4.0;
-  // Each half deforms differently
-  disp+=uMorph*n2*1.5*side;
+  float morphPush=side*uMorph*5.0;
+  disp+=uMorph*n2*2.0*side;
 
-  // Fire: violent spikes erupt from surface
-  float fireDisp=uFire*(n2*4.0+sin(uTime*6.0+pos.y*3.0)*2.0);
-  // Tendrils reaching upward
-  fireDisp+=uFire*max(0.0,sin(uTime*4.0+pos.x*5.0))*3.0*smoothstep(-1.0,2.0,pos.y);
+  // Fire: violent eruption with directional tendrils
+  float fireBase=n2*5.0+sin(uTime*7.0+pos.y*4.0)*3.0;
+  float tendril=max(0.0,sin(uTime*5.0+pos.x*6.0))*4.0*smoothstep(-1.0,3.0,pos.y);
+  float fireDisp=uFire*(fireBase+tendril);
 
-  // Explode: vertices shoot outward
-  float explodeDisp=uExplode*n*8.0;
+  // Explode
+  float explodeDisp=uExplode*(n*10.0+2.0);
 
-  // Pulse: rhythmic expansion on beat
-  float pulse=uPulse*sin(uTime*8.0)*0.5;
+  // Pulse
+  float pulse=uPulse*sin(uTime*10.0)*0.6;
 
-  // Converge: collapse inward
-  float conv=uConverge*(-length(pos)*0.3);
+  // Converge
+  float conv=uConverge*(-length(pos)*0.4);
 
-  vec3 displaced=pos+normal*(disp+fireDisp+explodeDisp+pulse+conv);
+  // Data: quantise to geometric facets
+  float dataQ=uDataVis*(floor(n*6.0)/6.0-n)*1.5;
+
+  vec3 displaced=pos+normal*(disp+fireDisp+explodeDisp+pulse+conv+dataQ);
   displaced.x+=morphPush;
 
+  vDisp=length(displaced-pos);
   vW=(modelMatrix*vec4(displaced,1.0)).xyz;
   vN=normalize(normalMatrix*(normal+vec3(n*0.3,n2*0.3,n*0.2)));
   vec3 viewDir=normalize(cameraPosition-vW);
-  vFr=pow(1.0-max(dot(viewDir,vN),0.0),2.5);
+  vFr=pow(1.0-max(dot(viewDir,vN),0.0),2.2);
 
   gl_Position=projectionMatrix*modelViewMatrix*vec4(displaced,1.0);
 }`;
 
+/* ═══ ORGANISM — FRAGMENT SHADER ═══ */
 const ORG_F=`
-uniform float uTime,uMorph,uFire,uConverge,uEmissive,uDataVis;
+uniform float uTime,uMorph,uFire,uConverge,uEmissive,uDataVis,uColorTemp;
 uniform vec3 uHCol,uACol,uFCol;
-varying vec3 vN,vW;varying float vFr,vNoise,vSide;
+varying vec3 vN,vW;varying float vFr,vNoise,vSide,vDisp;
 
 void main(){
-  // Colour split: human left, AI right — smooth gradient through centre
   float side=smoothstep(-3.0,3.0,vSide);
   vec3 base=mix(uHCol,uACol,side);
 
-  // Fire: hot orange bleeds in from surface distortion
-  vec3 fireCol=mix(uFCol,vec3(1.0,0.9,0.3),vFr);
-  base=mix(base,fireCol,uFire*(0.4+vNoise*0.4));
+  // Fire: incandescent heat gradient (dark red → orange → yellow → white)
+  if(uFire>0.01){
+    float heat=vDisp*0.12*uFire;
+    vec3 fc=mix(vec3(0.5,0.0,0.0),vec3(1.0,0.4,0.0),clamp(heat,0.0,1.0));
+    fc=mix(fc,vec3(1.0,0.9,0.5),clamp(heat-1.0,0.0,1.0));
+    base=mix(base,fc,uFire*(0.5+vFr*0.5));
+  }
 
-  // Data visualisation mode: circuit-like patterns
+  // Data: animated circuit traces
   if(uDataVis>0.01){
-    float grid=step(0.48,fract(vW.x*3.0))+step(0.48,fract(vW.y*3.0));
-    base=mix(base,vec3(0.0,0.8,1.0),uDataVis*grid*0.3);
-    // Scrolling data lines
-    float dataLine=step(0.95,fract(vW.y*8.0-uTime*2.0));
-    base+=vec3(0.0,0.5,1.0)*dataLine*uDataVis*0.5;
+    float grid=step(0.46,fract(vW.x*2.5))+step(0.46,fract(vW.y*2.5));
+    float pulse=smoothstep(0.85,1.0,fract(vW.y*6.0-uTime*3.0));
+    float pulse2=smoothstep(0.85,1.0,fract(vW.x*4.0+uTime*2.0));
+    vec3 dc=vec3(0.0,0.85,1.0);
+    base=mix(base,dc,uDataVis*grid*0.4);
+    base+=dc*(pulse+pulse2)*uDataVis*0.3;
   }
 
   // Lighting
   vec3 L=normalize(vec3(0.5,1.0,0.8));
   float diff=max(dot(vN,L),0.0)*0.5+0.5;
-  float spec=pow(max(dot(reflect(-L,vN),normalize(cameraPosition-vW)),0.0),32.0);
+  float spec=pow(max(dot(reflect(-L,vN),normalize(cameraPosition-vW)),0.0),48.0);
+  float sss=pow(max(dot(-vN,L),0.0),1.5)*0.5;
 
-  // Subsurface
-  float sss=pow(max(dot(-vN,L),0.0),1.5)*0.4;
+  // Rim — strong, mode-reactive
+  vec3 rimCol=mix(uHCol,uACol,side)*2.5;
+  rimCol=mix(rimCol,uFCol*4.0,uFire);
+  rimCol=mix(rimCol,vec3(0.0,1.0,1.2),uDataVis*0.5);
 
-  // Rim: STRONG — this is what makes it read at distance
-  vec3 rimCol=mix(uHCol,uACol,side)*2.0;
-  rimCol=mix(rimCol,uFCol*3.0,uFire);
-
-  vec3 col=base*diff+rimCol*vFr+base*sss+vec3(1.0)*spec*0.3;
+  vec3 col=base*diff+rimCol*vFr+base*sss+vec3(1.0)*spec*0.35;
 
   // Emissive core glow
-  float emPulse=sin(uTime*4.0+vW.y*6.0)*0.5+0.5;
-  col+=base*uEmissive*emPulse*0.6;
+  float emP=sin(uTime*5.0+vW.y*8.0)*0.5+0.5;
+  col+=base*uEmissive*emP*0.7;
 
-  // Fire: incandescent edges
-  col+=uFCol*uFire*vFr*3.0;
-  col+=vec3(1.0,0.6,0.1)*uFire*pow(vFr,1.5)*2.0;
+  // Fire incandescence on edges
+  col+=uFCol*uFire*vFr*4.0;
+  col+=vec3(1.0,0.6,0.1)*uFire*pow(vFr,1.5)*3.0;
+
+  // Colour temperature shift across narrative
+  float warm=clamp(-uColorTemp,0.0,1.0);
+  float cool=clamp(uColorTemp,0.0,1.0);
+  col*=mix(vec3(1.0),vec3(1.15,1.0,0.85),warm);
+  col*=mix(vec3(1.0),vec3(0.85,0.95,1.15),cool);
 
   gl_FragColor=vec4(col,1.0);
 }`;
@@ -249,27 +302,27 @@ const orgU={
   uTime:{value:0},uMorph:{value:0},uFire:{value:0},
   uConverge:{value:0},uExplode:{value:0},uPulse:{value:0},
   uEmissive:{value:0},uScale:{value:1},uDataVis:{value:0},
+  uColorTemp:{value:0},
   uHCol:{value:new THREE.Color(0xff1a5e)},
   uACol:{value:new THREE.Color(0x00d4ff)},
   uFCol:{value:new THREE.Color(0xff3300)},
 };
 
 const org=new THREE.Mesh(
-  new THREE.IcosahedronGeometry(5,48),
+  new THREE.IcosahedronGeometry(5,GEO_DETAIL),
   new THREE.ShaderMaterial({uniforms:orgU,vertexShader:ORG_V,fragmentShader:ORG_F,side:THREE.DoubleSide})
 );
 S.add(org);
 
-/* ═══ EMBERS — 8000 particles that swarm around the organism ═══ */
-const EC=8000;
+/* ═══ PARTICLES ═══ */
 const eG=new THREE.BufferGeometry();
-const eP=new Float32Array(EC*3),ePh=new Float32Array(EC),eSz=new Float32Array(EC),eSd=new Float32Array(EC);
-for(let i=0;i<EC;i++){
+const eP=new Float32Array(P_COUNT*3),ePh=new Float32Array(P_COUNT),eSz=new Float32Array(P_COUNT),eSd=new Float32Array(P_COUNT);
+for(let i=0;i<P_COUNT;i++){
   const th=Math.random()*Math.PI*2,ph=Math.acos(Math.random()*2-1);
   const r=5+Math.random()*12;
   eP[i*3]=r*Math.sin(ph)*Math.cos(th);eP[i*3+1]=r*Math.sin(ph)*Math.sin(th);eP[i*3+2]=r*Math.cos(ph);
-  ePh[i]=Math.random()*6.28;eSz[i]=0.4+Math.random()*2.0;
-  eSd[i]=i<EC/3?-1:(i<EC*2/3?1:0);
+  ePh[i]=Math.random()*6.28;eSz[i]=0.5+Math.random()*2.2;
+  eSd[i]=i<P_COUNT/3?-1:(i<P_COUNT*2/3?1:0);
 }
 eG.setAttribute('position',new THREE.BufferAttribute(eP,3));
 eG.setAttribute('aP',new THREE.BufferAttribute(ePh,1));
@@ -287,27 +340,25 @@ const eM=new THREE.ShaderMaterial({
     varying vec3 vC;varying float vA;
     void main(){
       vec3 p=position;
-      // Orbit around the organism
       float angle=uTime*uOrbit*0.3+aP;
       float r=length(p.xz);
       p.x=cos(angle)*r;p.z=sin(angle)*r;
-      // Breathe
       p+=normalize(p)*sin(uTime*0.5+aP)*1.5;
-      // Morph: swarm separates
       p.x+=aSd*uMorph*8.0;
-      // Fire: chaotic eruption
       if(uFire>0.01){
         p.y+=sin(uTime*6.0+aP*4.0)*uFire*8.0;
         p.x+=cos(uTime*5.0+aP*3.0)*uFire*4.0;
         p.z+=sin(uTime*4.0+aP*2.0)*uFire*3.0;
       }
-      // Data: streams
       if(uData>0.01){
-        float stream=floor(aP*3.0/6.28);
-        p.x=mix(p.x,(stream-1.0)*10.0+sin(p.y*0.3+uTime)*2.0,uData);
-        p.y=mod(p.y-uTime*10.0,40.0)-20.0;
+        float col=floor(aP*5.0/6.28);
+        float colX=(col-2.0)*6.0+sin(aP*3.0)*1.5;
+        float fallSpd=8.0+aP*4.0;
+        float y=mod(p.y-uTime*fallSpd+aP*20.0,40.0)-20.0;
+        p.x=mix(p.x,colX,uData);
+        p.y=mix(p.y,y,uData);
+        p.z=mix(p.z,sin(aP)*3.0,uData);
       }
-      // Converge
       p=mix(p,vec3(0),uConv*0.7);
       vec4 mv=modelViewMatrix*vec4(p,1.0);
       gl_PointSize=aS*uInt*(250.0/-mv.z);
@@ -329,18 +380,16 @@ const eM=new THREE.ShaderMaterial({
 });
 S.add(new THREE.Points(eG,eM));
 
-/* ═══ LOCK — procedural, imposing ═══ */
+/* ═══ LOCK ═══ */
 const lockG=new THREE.Group();
 const lkM=new THREE.MeshStandardMaterial({color:0xff2200,emissive:0xff1100,emissiveIntensity:0.8,metalness:0.95,roughness:0.1});
 const lockBody=new THREE.Mesh(new THREE.BoxGeometry(4,5,1.5,4,4,2),lkM);
 lockG.add(lockBody);
-// Keyhole
 const khM=new THREE.MeshStandardMaterial({color:0x020204,emissive:0x000000,metalness:0,roughness:1});
 const kh=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,1.6,16),khM);
-kh.rotation.x=Math.PI/2;kh.position.set(0,-0.2,0);lockG.children[0].add(kh);
+kh.rotation.x=Math.PI/2;kh.position.set(0,-0.2,0);lockBody.add(kh);
 const ks=new THREE.Mesh(new THREE.BoxGeometry(0.3,1.5,1.6),khM);
-ks.position.set(0,-1.2,0);lockG.children[0].add(ks);
-// Shackle
+ks.position.set(0,-1.2,0);lockBody.add(ks);
 const shM=new THREE.MeshStandardMaterial({color:0xcc3300,emissive:0x991100,emissiveIntensity:0.5,metalness:0.95,roughness:0.08});
 const shackle=new THREE.Mesh(new THREE.TorusGeometry(1.8,0.4,12,24,Math.PI),shM);
 shackle.position.set(0,2.5,0);
@@ -349,40 +398,66 @@ lockG.position.z=5;lockG.visible=false;
 S.add(lockG);
 
 /* ═══ LIGHTING ═══ */
-S.add(new THREE.AmbientLight(0x080818,0.4));
-const dL=new THREE.DirectionalLight(0xffffff,0.6);dL.position.set(5,10,8);S.add(dL);
+S.add(new THREE.AmbientLight(0x080818,0.35));
+const dL=new THREE.DirectionalLight(0xffffff,0.5);dL.position.set(5,10,8);S.add(dL);
 const hL=new THREE.PointLight(0xff1a5e,0,60);hL.position.set(-15,0,8);S.add(hL);
 const aL=new THREE.PointLight(0x00d4ff,0,60);aL.position.set(15,0,8);S.add(aL);
 const fL=new THREE.PointLight(0xff3300,0,50);fL.position.set(0,-3,12);S.add(fL);
 
-/* ═══ POST-PROCESSING ═══ */
+/* ═══ POST-PROCESSING ═══
+   Combined cinematic pass: chromatic aberration + vignette + film grain
+   Single draw call instead of three separate passes — critical for mobile GPU budget.
+*/
 const comp=new EffectComposer(R);
 comp.addPass(new RenderPass(S,cam));
-const bloom=new UnrealBloomPass(new THREE.Vector2(W(),H()),1.5,0.4,0.7);
+const bloom=new UnrealBloomPass(new THREE.Vector2(fw,fh),1.5,0.4,0.7);
 comp.addPass(bloom);
-const chroma={
-  uniforms:{tDiffuse:{value:null},u:{value:0.003}},
+
+const cinematicShader={
+  uniforms:{
+    tDiffuse:{value:null},
+    uChroma:{value:0.003},
+    uTime:{value:0},
+    uGrain:{value:0.06},
+    uVigD:{value:0.5},
+    uVigTint:{value:new THREE.Color(0x030008)},
+  },
   vertexShader:`varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-  fragmentShader:`uniform sampler2D tDiffuse;uniform float u;varying vec2 v;void main(){vec2 d=v-0.5;float l=dot(d,d);float o=u*l;gl_FragColor=vec4(texture2D(tDiffuse,v+d*o).r,texture2D(tDiffuse,v).g,texture2D(tDiffuse,v-d*o).b,1.0);}`,
+  fragmentShader:`
+    uniform sampler2D tDiffuse;uniform float uChroma,uTime,uGrain,uVigD;uniform vec3 uVigTint;
+    varying vec2 v;
+    float hash12(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
+    void main(){
+      vec2 d=v-0.5;float l=dot(d,d);
+      float o=uChroma*l;
+      float r=texture2D(tDiffuse,v+d*o).r;
+      float g=texture2D(tDiffuse,v).g;
+      float b=texture2D(tDiffuse,v-d*o).b;
+      vec3 col=vec3(r,g,b);
+      float vig=1.0-l*0.4;
+      col=mix(uVigTint,col,clamp(pow(max(vig,0.0),uVigD),0.0,1.0));
+      float grain=(hash12(v*vec2(uTime*97.0,uTime*53.0))-0.5)*uGrain;
+      col+=grain;
+      gl_FragColor=vec4(col,1.0);
+    }
+  `,
 };
-const cP=new ShaderPass(chroma);comp.addPass(cP);
-const vig={
-  uniforms:{tDiffuse:{value:null},uD:{value:0.5},uT:{value:new THREE.Color(0x030008)}},
-  vertexShader:`varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-  fragmentShader:`uniform sampler2D tDiffuse;uniform float uD;uniform vec3 uT;varying vec2 v;void main(){vec4 c=texture2D(tDiffuse,v);vec2 u=(v-0.5)*2.0;float vi=1.0-dot(u,u)*0.35;c.rgb=mix(uT,c.rgb,clamp(pow(max(vi,0.0),uD),0.0,1.0));gl_FragColor=c;}`,
-};
-comp.addPass(new ShaderPass(vig));
+const cinPass=new ShaderPass(cinematicShader);
+comp.addPass(cinPass);
 comp.addPass(new OutputPass());
 
-/* ═══ VOICE ═══ */
+/* ═══ VOICE — swappable module ═══ */
 let vc=null;
 function loadV(){const vs=speechSynthesis.getVoices();vc=vs.find(v=>/Daniel|Google UK Male|Alex|Aaron/i.test(v.name)&&/en/i.test(v.lang))||vs.find(v=>/en-(GB|US)/i.test(v.lang)&&!/female/i.test(v.name))||vs.find(v=>/en/i.test(v.lang))||vs[0];}
 speechSynthesis.onvoiceschanged=loadV;loadV();
-function say(txt,rate=0.9,pitch=0.8){if(!vc)return;const u=new SpeechSynthesisUtterance(txt);u.voice=vc;u.rate=rate;u.pitch=pitch;u.volume=1;speechSynthesis.speak(u);}
+function say(txt,rate=0.9,pitch=0.8){
+  speechSynthesis.cancel(); // Prevent audio pileup
+  if(!vc)return;
+  const u=new SpeechSynthesisUtterance(txt);u.voice=vc;u.rate=rate;u.pitch=pitch;u.volume=1;speechSynthesis.speak(u);
+}
 
-/* ═══ SCRIPT — TIGHT timing, zero dead air ═══ */
+/* ═══ SCRIPT ═══ */
 const Q=[
-// t    d   say                                           html                                                                    sub                      mode        rate pitch
 {t:0,  d:3.5,say:"Welcome to Day SIX of our journey.",   html:'Welcome to Day <span class="b f">SIX</span>',                     sub:'of our journey.',   m:'intro',   r:.82,p:.7},
 {t:3.8,d:2.8,say:"ONE brand, crafted by human hands.",   html:'<span class="b h">ONE</span> brand',                              sub:'crafted by human hands.',m:'human',r:.92,p:.85},
 {t:7,  d:2.5,say:"ONE, generated by A.I.",                html:'<span class="b a">ONE</span> generated by A.I.',                  sub:'',                  m:'ai',      r:.92,p:.85},
@@ -409,9 +484,9 @@ const TOTAL=69;
 
 /* ═══ VISUAL STATE ═══ */
 const v={
-  morph:0,fire:0,conv:0,explode:0,pulse:0,emissive:0,scale:1,dataVis:0,
+  morph:0,fire:0,conv:0,explode:0,pulse:0,emissive:0,scale:1,dataVis:0,colorTemp:0,
   eInt:.5,eMorph:0,eFire:0,eConv:0,eData:0,eOrbit:.5,
-  bloom:1.5,chroma:.003,
+  bloom:1.5,chroma:.003,grain:.06,
   camX:0,camY:0,camZ:18,camShake:0,
   hL:0,aL:0,fL:0,
   lockVis:false,
@@ -421,6 +496,7 @@ const v={
 const tE=document.getElementById('t'),sE=document.getElementById('sub');
 const vsE=document.getElementById('vs'),hudE=document.getElementById('hud');
 const ctaE=document.getElementById('cta'),pF=document.getElementById('prog-f');
+const replayE=document.getElementById('replay');
 
 function setBars(a,b,c,d,e,f){
   document.getElementById('gh').style.width=a+'%';document.getElementById('ga').style.width=b+'%';
@@ -428,119 +504,113 @@ function setBars(a,b,c,d,e,f){
   document.getElementById('eh').style.width=e+'%';document.getElementById('ea').style.width=f+'%';
 }
 
+function haptic(ms){try{navigator.vibrate&&navigator.vibrate(ms);}catch(e){}}
+
 function rst(){
-  Object.assign(v,{morph:0,fire:0,conv:0,explode:0,pulse:0,emissive:0,scale:1,dataVis:0,
+  Object.assign(v,{morph:0,fire:0,conv:0,explode:0,pulse:0,emissive:0,scale:1,dataVis:0,colorTemp:0,
     eMorph:0,eFire:0,eConv:0,eData:0,eOrbit:.5,
-    bloom:1.5,chroma:.003,camShake:0,hL:0,aL:0,fL:0,lockVis:false});
+    bloom:1.5,chroma:.003,grain:.06,camShake:0,hL:0,aL:0,fL:0,lockVis:false});
   v.bgCol.set(0x020204);
   hudE.classList.remove('on');ctaE.classList.remove('on');
   vsE.style.opacity='0';lockG.visible=false;
 }
 
-/* ═══ MODE HANDLERS — each one is a distinct visual world ═══ */
+/* ═══ MODE HANDLERS ═══ */
 const M={
-  intro(){v.emissive=.8;v.bloom=2.0;v.pulse=.6;v.camShake=.02;v.eInt=.7;v.camZ=16;},
+  intro(){v.emissive=.8;v.bloom=2.0;v.pulse=.6;v.camShake=.02;v.eInt=.7;v.camZ=15;v.colorTemp=-.3;},
   human(){
-    // Organism leans left, human hemisphere glows hot pink
-    v.morph=.5;v.eMorph=.4;v.hL=5;v.camX=-3;v.camZ=14;
-    v.emissive=.4;v.scale=1.1;
+    v.morph=.5;v.eMorph=.4;v.hL=5;v.camX=-2;v.camZ=13;
+    v.emissive=.4;v.scale=1.1;v.colorTemp=-.2;
   },
   ai(){
-    // Lean right, AI hemisphere pulses cyan
-    v.morph=.5;v.eMorph=.4;v.aL=5;v.camX=3;v.camZ=14;
-    v.emissive=.4;v.scale=1.1;
+    v.morph=.5;v.eMorph=.4;v.aL=5;v.camX=2;v.camZ=13;
+    v.emissive=.4;v.scale=1.1;v.colorTemp=.2;
   },
   split(){
-    // TEAR APART — two halves rip away from each other
-    v.morph=1;v.eMorph=1;v.hL=3;v.aL=3;v.camX=0;v.camZ=22;
-    v.scale=1.2;v.bloom=1.8;
+    v.morph=1;v.eMorph=1;v.hL=3;v.aL=3;v.camX=0;v.camZ=20;
+    v.scale=1.2;v.bloom=1.8;haptic(30);
   },
   fire(){
-    // ERUPTION — spikes, tendrils, camera shakes violently
     v.fire=1;v.eFire=1;v.fL=8;v.bloom=2.8;v.chroma=.015;
     v.camShake=.08;v.scale=1.3;v.emissive=.6;v.eInt=1;
-    v.bgCol.set(0x0a0200);
-    // Punch animation on text
+    v.bgCol.set(0x0a0200);v.colorTemp=-.5;v.grain=.1;
+    haptic(80);
     tE.classList.remove('punch');void tE.offsetWidth;tE.classList.add('punch');
   },
   perform(){
-    // VS flash — organism EXPLODES outward momentarily
     vsE.style.opacity='1';
     v.explode=.5;v.camShake=.05;v.bloom=2.5;v.pulse=1;v.eInt=1;
+    v.colorTemp=-.3;v.chroma=.01;
+    haptic(120);
     setTimeout(()=>{vsE.style.opacity='0';},1500);
     setTimeout(()=>{v.explode=0;},800);
   },
   channels(){
-    // Data streams form — organism shows circuit patterns
     v.dataVis=.6;v.eData=.6;hudE.classList.add('on');
-    setBars(42,38,55,48,40,45);v.aL=2;v.hL=2;v.camZ=20;v.bloom=1.2;
+    setBars(42,38,55,48,40,45);v.aL=2;v.hL=2;v.camZ=18;v.bloom=1.2;v.colorTemp=.2;
   },
   equal(){
     v.dataVis=.8;v.eData=.7;hudE.classList.add('on');
-    setBars(50,50,50,50,50,50);v.camZ=22;
+    setBars(50,50,50,50,50,50);v.camZ=20;
   },
   battle(){
-    // WAR — split + fire + data overlay
     v.morph=.7;v.fire=.4;v.eMorph=.6;v.eFire=.3;v.dataVis=.3;
-    v.hL=3;v.aL=3;v.fL=4;v.bloom=2;v.camShake=.03;v.scale=1.15;
+    v.hL=3;v.aL=3;v.fL=4;v.bloom=2;v.camShake=.03;v.scale=1.15;v.colorTemp=-.3;
     hudE.classList.add('on');setBars(68,58,72,62,52,58);
+    haptic(50);
   },
   cat1(){
     v.dataVis=.5;v.eData=.4;v.emissive=.5;v.bloom=1.4;
-    hudE.classList.add('on');v.camZ=16;
+    hudE.classList.add('on');v.camZ=15;
   },
   data(){
-    // Full data visualisation — organism becomes a data sculpture
     v.dataVis=1;v.eData=1;v.bloom=1.2;v.aL=3;
-    hudE.classList.add('on');setBars(75,65,80,68,58,70);v.camZ=18;
-    v.emissive=.3;
+    hudE.classList.add('on');setBars(75,65,80,68,58,70);v.camZ=16;
+    v.emissive=.3;v.colorTemp=.3;
   },
-  data2(){v.dataVis=.9;v.eData=.8;hudE.classList.add('on');v.emissive=.4;},
+  data2(){v.dataVis=.9;v.eData=.8;hudE.classList.add('on');v.emissive=.4;v.colorTemp=-.1;},
   numbers(){
-    // Clinical — stripped back, monochrome with cyan accents
     v.dataVis=1;v.eData=1;v.bloom=.8;v.chroma=.005;
-    v.bgCol.set(0x040408);v.aL=2;v.camZ=20;
+    v.bgCol.set(0x040408);v.aL=2;v.camZ=18;v.colorTemp=.4;v.grain=.04;
   },
   mystery(){
-    // Organism shrinks, darkens — everything pulls away
     v.scale=.4;v.eInt=.15;v.bloom=.5;v.emissive=.1;
-    v.camZ=25;v.bgCol.set(0x020204);
+    v.camZ=24;v.bgCol.set(0x020204);v.colorTemp=.3;v.grain=.08;
   },
   locked(){
-    // LOCK appears through the organism — fire accent
     v.lockVis=true;v.fire=.15;v.fL=3;v.chroma=.008;
-    v.scale=.6;v.eInt=.3;v.eFire=.1;v.bloom=1.2;
+    v.scale=.6;v.eInt=.3;v.eFire=.1;v.bloom=1.2;v.colorTemp=-.2;
+    haptic(40);
   },
   reveal(){
-    // Slow expansion — something is building
     v.scale=.7;v.eInt=.3;v.bloom=.8;v.emissive=.2;
-    v.lockVis=false;v.camZ=22;
+    v.lockVis=false;v.camZ=20;
   },
   ops(){
-    v.dataVis=.5;v.eData=.4;v.eInt=.5;v.scale=.9;v.bloom=1;v.camZ=18;
+    v.dataVis=.5;v.eData=.4;v.eInt=.5;v.scale=.9;v.bloom=1;v.camZ=16;
   },
   you(){
-    // MASSIVE — organism fills entire screen, converges, glows
     v.conv=.5;v.eConv=.6;v.bloom=2.5;v.emissive=1;
-    v.eInt=1.2;v.scale=1.4;v.camZ=12;v.pulse=.8;
-    v.hL=2;v.aL=2;
+    v.eInt=1.2;v.scale=1.4;v.camZ=10;v.pulse=.8;
+    v.hL=2;v.aL=2;v.colorTemp=-.2;v.chroma=.008;
+    haptic(100);
     tE.classList.remove('punch');void tE.offsetWidth;tE.classList.add('punch');
   },
   question(){
-    v.scale=.8;v.emissive=.5;v.bloom=1.3;v.eInt=.4;v.camZ=18;
+    v.scale=.8;v.emissive=.5;v.bloom=1.3;v.eInt=.4;v.camZ=16;v.colorTemp=.1;
   },
   cta(){
-    ctaE.classList.add('on');v.scale=.7;v.eInt=.3;v.bloom=.9;v.camZ=22;
+    ctaE.classList.add('on');v.scale=.7;v.eInt=.3;v.bloom=.9;v.camZ=20;
   },
   outro(){
-    v.eInt=.2;v.bloom=.6;v.scale=.6;v.emissive=.1;
-    ctaE.classList.remove('on');hudE.classList.remove('on');v.camZ=24;
+    v.eInt=.2;v.bloom=.6;v.scale=.6;v.emissive=.1;v.colorTemp=-.2;
+    ctaE.classList.remove('on');hudE.classList.remove('on');v.camZ=22;
   },
 };
 
 /* ═══ ENGINE ═══ */
 let run=false,t0=0,cur=-1;
-function fire(c){
+function fireCue(c){
   rst();
   tE.innerHTML=c.html;tE.classList.add('on');
   if(c.sub){sE.textContent=c.sub;sE.classList.add('on');}else sE.classList.remove('on');
@@ -548,30 +618,41 @@ function fire(c){
   if(M[c.m])M[c.m]();
   setTimeout(()=>{tE.classList.remove('on');sE.classList.remove('on');},c.d*1000-400);
 }
-document.getElementById('go').addEventListener('click',()=>{
-  document.getElementById('go').classList.add('off');
-  t0=performance.now()/1000;run=true;cur=-1;speechSynthesis.cancel();
-});
 
-/* ═══ RENDER ═══ */
-const clk=new THREE.Clock();
+function startSequence(){
+  document.getElementById('go').classList.add('off');
+  replayE.classList.remove('on');
+  t0=performance.now()/1000;run=true;cur=-1;
+  speechSynthesis.cancel();
+}
+document.getElementById('go').addEventListener('click',startSequence);
+document.getElementById('replayBtn').addEventListener('click',startSequence);
+
+/* ═══ RENDER LOOP ═══ */
+let _pt=0,_et=0;
 const lp=(a,b,t)=>a+(b-a)*t;
 
-function anim(){
+function anim(ts){
   requestAnimationFrame(anim);
-  const t=clk.getElapsedTime(),dt=Math.min(clk.getDelta(),.05);
-  const sp=.06; // Fast lerp for snappy response
+  const dt=_pt?Math.min((ts-_pt)/1000,.05):0;
+  _pt=ts;_et+=dt;
+  const t=_et;
+  const sp=.06;
 
   if(run){
     const el=performance.now()/1000-t0;
     pF.style.width=(Math.min(el/TOTAL,1)*100)+'%';
     for(let i=0;i<Q.length;i++){
-      if(el>=Q[i].t&&el<Q[i].t+Q[i].d&&i!==cur){cur=i;fire(Q[i]);}
+      if(el>=Q[i].t&&el<Q[i].t+Q[i].d&&i!==cur){cur=i;fireCue(Q[i]);}
     }
-    if(el>=TOTAL){run=false;rst();tE.classList.remove('on');}
+    if(el>=TOTAL){
+      run=false;rst();tE.classList.remove('on');sE.classList.remove('on');
+      speechSynthesis.cancel();
+      replayE.classList.add('on');
+    }
   }
 
-  // ── Organism ──
+  // Organism
   orgU.uTime.value=t;
   orgU.uMorph.value=lp(orgU.uMorph.value,v.morph,sp);
   orgU.uFire.value=lp(orgU.uFire.value,v.fire,sp);
@@ -581,11 +662,12 @@ function anim(){
   orgU.uEmissive.value=lp(orgU.uEmissive.value,v.emissive,sp);
   orgU.uScale.value=lp(orgU.uScale.value,v.scale,sp);
   orgU.uDataVis.value=lp(orgU.uDataVis.value,v.dataVis,sp);
+  orgU.uColorTemp.value=lp(orgU.uColorTemp.value,v.colorTemp,sp);
 
   org.rotation.y+=dt*0.12;
   org.rotation.x=Math.sin(t*0.08)*0.1;
 
-  // ── Embers ──
+  // Embers
   eM.uniforms.uTime.value=t;
   eM.uniforms.uInt.value=lp(eM.uniforms.uInt.value,v.eInt,sp);
   eM.uniforms.uMorph.value=lp(eM.uniforms.uMorph.value,v.eMorph,sp);
@@ -594,7 +676,7 @@ function anim(){
   eM.uniforms.uData.value=lp(eM.uniforms.uData.value,v.eData,sp);
   eM.uniforms.uOrbit.value=lp(eM.uniforms.uOrbit.value,v.eOrbit,sp);
 
-  // ── Lock ──
+  // Lock
   lockG.visible=v.lockVis;
   if(lockG.visible){
     lockG.rotation.y+=dt*0.5;
@@ -602,9 +684,9 @@ function anim(){
     lkM.emissiveIntensity=0.8+Math.sin(t*4)*0.4;
   }
 
-  // ── Camera — close, intimate, reactive ──
-  cam.position.x=lp(cam.position.x,v.camX+Math.sin(t*0.15)*1.5,sp);
-  cam.position.y=lp(cam.position.y,v.camY+Math.sin(t*0.18)*1.0,sp);
+  // Camera
+  cam.position.x=lp(cam.position.x,v.camX+Math.sin(t*0.15)*1.2,sp);
+  cam.position.y=lp(cam.position.y,v.camY+Math.sin(t*0.18)*0.8,sp);
   cam.position.z=lp(cam.position.z,v.camZ,sp);
   if(v.camShake>.001){
     cam.position.x+=(Math.random()-.5)*v.camShake*3;
@@ -613,30 +695,41 @@ function anim(){
   }
   cam.lookAt(0,0,0);
 
-  // ── Lights ──
+  // Lights
   hL.intensity=lp(hL.intensity,v.hL,sp);
   aL.intensity=lp(aL.intensity,v.aL,sp);
   fL.intensity=lp(fL.intensity,v.fL,sp);
 
-  // ── Background ──
+  // Background
   S.background.lerp(v.bgCol,sp);
 
-  // ── Post ──
+  // Post-processing
   bloom.strength=lp(bloom.strength,v.bloom,sp);
-  cP.uniforms.u.value=lp(cP.uniforms.u.value,v.chroma,sp);
+  cinPass.uniforms.uChroma.value=lp(cinPass.uniforms.uChroma.value,v.chroma,sp);
+  cinPass.uniforms.uGrain.value=lp(cinPass.uniforms.uGrain.value,v.grain,sp);
+  cinPass.uniforms.uTime.value=t;
 
   comp.render();
 }
-anim();
 
+/* Warm-up frame — forces shader compilation before user interacts */
+comp.render();
+console.log('[AvA] Warm-up frame rendered');
+
+requestAnimationFrame(anim);
+
+/* ═══ RESIZE ═══ */
 let rT;window.addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(()=>{
-  cam.aspect=W()/H();cam.updateProjectionMatrix();R.setSize(W(),H());comp.setSize(W(),H());
+  const{w,h}=getFrameSize();
+  frame.style.width=w+'px';frame.style.height=h+'px';
+  cam.aspect=w/h;cam.updateProjectionMatrix();
+  R.setSize(w,h);comp.setSize(w,h);
 },150);});
 
-console.log('[AvA] Fully initialised');
-} catch(err) {
-  console.error('[AvA] Init error:', err);
-  document.getElementById('go').innerHTML = '<h1 style="color:red">Error</h1><p style="color:#fff;font-size:14px;margin-top:12px">'+err.message+'</p>';
+console.log('[AvA] Fully initialised — r183, 9:16, domain-warped FBM');
+}catch(err){
+  console.error('[AvA] Init error:',err);
+  document.getElementById('go').innerHTML='<h1 style="color:red">Error</h1><p style="color:#fff;font-size:14px;margin-top:12px;max-width:80vw;word-break:break-all">'+err.message+'</p>';
 }
 </script>
 </body>
