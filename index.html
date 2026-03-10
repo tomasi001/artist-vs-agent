@@ -10,1047 +10,621 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --font:'Inter',system-ui,sans-serif;
-  --mono:'JetBrains Mono',monospace;
-  --bg:#030306;
-  --human:#ff2d6a;
-  --ai:#00c8ff;
-  --fire:#ff4400;
-  --gold:#ffcc00;
-  --ember:rgba(255,68,0,0.15);
+  --f:'Inter',system-ui,sans-serif;
+  --m:'JetBrains Mono',monospace;
+  --human:#ff1a5e;
+  --ai:#00d4ff;
+  --fire:#ff3300;
+  --gold:#ffbb00;
 }
-html,body{
-  font-family:var(--font);background:var(--bg);color:#fff;
-  overflow:hidden;width:100%;height:100%;
-  -webkit-font-smoothing:antialiased;
-  cursor:default;
-}
+html,body{font-family:var(--f);background:#020204;color:#fff;overflow:hidden;width:100%;height:100%;-webkit-font-smoothing:antialiased}
 canvas#gl{position:fixed;inset:0;z-index:1}
 
-/* ── Typography overlay ── */
-#text-layer{
+/* Text — massive, front and centre, ON TOP of the 3D */
+#txt{
   position:fixed;inset:0;z-index:10;
   display:flex;align-items:center;justify-content:center;
-  flex-direction:column;pointer-events:none;
-  padding:0 6vw;
+  flex-direction:column;pointer-events:none;padding:0 5vw;
 }
-#main-text{
-  font-weight:100;font-size:clamp(1.8rem,5.5vw,4.8rem);
-  line-height:1.08;letter-spacing:-0.04em;
-  text-align:center;
-  opacity:0;transform:scale(0.96) translateY(12px);
-  transition:opacity 0.6s cubic-bezier(.22,1,.36,1),transform 0.6s cubic-bezier(.22,1,.36,1);
-  will-change:opacity,transform;
-  text-shadow:0 0 60px rgba(0,200,255,0.08);
+#t{
+  font-weight:100;font-size:clamp(2.4rem,7vw,6.5rem);
+  line-height:1.0;letter-spacing:-0.05em;text-align:center;
+  opacity:0;transform:scale(0.92);
+  transition:opacity 0.25s ease,transform 0.25s ease;
+  mix-blend-mode:difference;
 }
-#main-text.on{opacity:1;transform:scale(1) translateY(0)}
-#main-text .h{color:var(--human)}
-#main-text .a{color:var(--ai)}
-#main-text .f{color:var(--fire)}
-#main-text .g{color:var(--gold)}
-#main-text .w{font-weight:900}
-#main-text .l{font-weight:200;opacity:0.6;font-style:italic}
-#main-text .num{font-family:var(--mono);font-weight:700;letter-spacing:0.05em}
+#t.on{opacity:1;transform:scale(1)}
+#t.punch{transition:none;animation:punch 0.3s ease-out}
+@keyframes punch{0%{transform:scale(1.15);opacity:1}100%{transform:scale(1);opacity:1}}
+#t .h{color:var(--human)}
+#t .a{color:var(--ai)}
+#t .f{color:var(--fire)}
+#t .g{color:var(--gold)}
+#t .b{font-weight:900}
+#t .i{font-style:italic;font-weight:200;opacity:0.7}
+#t .mono{font-family:var(--m);letter-spacing:0.04em}
+#sub{
+  font-weight:300;font-size:clamp(0.8rem,1.5vw,1.1rem);
+  color:rgba(255,255,255,0.3);margin-top:10px;text-align:center;
+  opacity:0;transition:opacity 0.3s ease 0.1s;letter-spacing:0.03em;
+}
+#sub.on{opacity:1}
 
-#sub-text{
-  font-weight:300;font-size:clamp(0.85rem,1.6vw,1.15rem);
-  color:rgba(255,255,255,0.35);margin-top:14px;
-  text-align:center;letter-spacing:0.02em;
-  opacity:0;transition:opacity 0.4s ease 0.15s;
-}
-#sub-text.on{opacity:1}
-
-/* ── VS flash ── */
+/* VS — screen-filling flash */
 #vs{
-  position:fixed;inset:0;z-index:15;
-  display:flex;align-items:center;justify-content:center;
+  position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
   pointer-events:none;opacity:0;
-  transition:opacity 0.15s ease;
+  background:radial-gradient(circle,rgba(255,26,94,0.15),transparent 70%);
 }
 #vs span{
-  font-family:var(--mono);font-weight:900;
-  font-size:clamp(6rem,18vw,14rem);
+  font-family:var(--m);font-weight:900;font-size:clamp(8rem,25vw,20rem);
   background:linear-gradient(135deg,var(--human),var(--fire));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  filter:drop-shadow(0 0 80px rgba(255,45,106,0.5));
+  filter:drop-shadow(0 0 120px rgba(255,26,94,0.7));
 }
 
-/* ── Data HUD ── */
+/* HUD */
 #hud{
-  position:fixed;bottom:48px;left:50%;transform:translateX(-50%);
-  z-index:12;pointer-events:none;
-  display:flex;gap:32px;
-  opacity:0;transition:opacity 0.5s ease;
+  position:fixed;bottom:40px;left:50%;transform:translateX(-50%);
+  z-index:12;pointer-events:none;display:flex;gap:28px;
+  opacity:0;transition:opacity 0.3s ease;
 }
 #hud.on{opacity:1}
 .ch{text-align:center}
-.ch-name{
-  font-family:var(--mono);font-size:10px;
-  letter-spacing:0.14em;text-transform:uppercase;
-  color:rgba(255,255,255,0.4);margin-bottom:10px;
-}
-.ch-bars{display:flex;flex-direction:column;gap:4px}
-.bar{width:90px;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
-.bar-inner{height:100%;border-radius:2px;width:0%;transition:width 1s cubic-bezier(.22,1,.36,1)}
-.bar-inner.h{background:var(--human)}
-.bar-inner.ai{background:var(--ai)}
-.ch-legend{
-  font-size:9px;color:rgba(255,255,255,0.25);
-  margin-top:6px;font-family:var(--mono);letter-spacing:0.08em;
-}
+.ch-n{font-family:var(--m);font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px}
+.br{width:80px;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin:3px 0}
+.br-i{height:100%;border-radius:2px;width:0%;transition:width 0.8s cubic-bezier(.22,1,.36,1)}
+.br-i.h{background:var(--human)}.br-i.ai{background:var(--ai)}
 
-/* ── CTA ── */
-#cta{
-  position:fixed;bottom:56px;left:50%;transform:translateX(-50%);
-  z-index:14;pointer-events:auto;text-align:center;
-  opacity:0;transition:opacity 0.6s ease;
-}
+/* CTA */
+#cta{position:fixed;bottom:50px;left:50%;transform:translateX(-50%);z-index:14;text-align:center;opacity:0;transition:opacity 0.4s ease;pointer-events:auto}
 #cta.on{opacity:1}
-#cta p{font-weight:300;font-size:0.95rem;color:rgba(255,255,255,0.5);margin-bottom:14px}
-#cta button{
-  background:none;border:1px solid var(--ai);color:var(--ai);
-  padding:11px 36px;border-radius:4px;
-  font-family:var(--font);font-size:13px;font-weight:400;
-  letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;
-  transition:all 0.3s ease;
-}
-#cta button:hover{background:var(--ai);color:var(--bg)}
+#cta p{font-weight:300;font-size:0.9rem;color:rgba(255,255,255,0.45);margin-bottom:12px}
+#cta button{background:none;border:1px solid var(--ai);color:var(--ai);padding:10px 32px;border-radius:3px;font-family:var(--f);font-size:12px;font-weight:400;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+#cta button:hover{background:var(--ai);color:#020204}
 
-/* ── Progress ── */
-#prog{
-  position:fixed;bottom:0;left:0;width:100%;height:2px;z-index:20;
-  background:rgba(255,255,255,0.03);
-}
-#prog-fill{
-  height:100%;width:0%;
-  background:linear-gradient(90deg,var(--human),var(--ai));
-  transition:width 0.2s linear;
-}
+/* Progress */
+#prog{position:fixed;bottom:0;left:0;width:100%;height:2px;z-index:20;background:rgba(255,255,255,0.02)}
+#prog-f{height:100%;width:0%;background:linear-gradient(90deg,var(--human),var(--ai));transition:width 0.15s linear}
 
-/* ── Start ── */
-#start{
-  position:fixed;inset:0;z-index:100;
-  display:flex;align-items:center;justify-content:center;
-  flex-direction:column;background:var(--bg);cursor:pointer;
-  transition:opacity 0.7s ease;
-}
-#start.off{opacity:0;pointer-events:none}
-#start h1{
-  font-weight:100;font-size:clamp(2.2rem,5vw,4.2rem);
-  letter-spacing:-0.04em;
-}
-#start .sub{
-  font-weight:300;font-size:13px;color:rgba(255,255,255,0.3);
-  letter-spacing:0.12em;text-transform:uppercase;
-  margin-top:20px;animation:breathe 2.5s ease-in-out infinite;
-}
-@keyframes breathe{0%,100%{opacity:0.3}50%{opacity:0.8}}
-#start .day{
-  font-family:var(--mono);font-weight:700;font-size:clamp(0.7rem,1.2vw,0.9rem);
-  color:var(--fire);letter-spacing:0.2em;text-transform:uppercase;
-  margin-bottom:12px;
-}
+/* Start */
+#go{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#020204;cursor:pointer;transition:opacity 0.5s}
+#go.off{opacity:0;pointer-events:none}
+#go .day{font-family:var(--m);font-weight:700;font-size:11px;color:var(--fire);letter-spacing:0.25em;text-transform:uppercase;margin-bottom:10px}
+#go h1{font-weight:100;font-size:clamp(2rem,5vw,4rem);letter-spacing:-0.04em}
+#go .p{font-weight:300;font-size:12px;color:rgba(255,255,255,0.25);letter-spacing:0.12em;text-transform:uppercase;margin-top:18px;animation:br 2s ease-in-out infinite}
+@keyframes br{0%,100%{opacity:0.25}50%{opacity:0.7}}
 </style>
 </head>
 <body>
-
-<div id="start">
-  <div class="day">Day 6</div>
-  <h1>Artist vs Agent</h1>
-  <div class="sub">Click anywhere to begin</div>
-</div>
-
+<div id="go"><div class="day">Day 6</div><h1>Artist vs Agent</h1><div class="p">Tap to begin</div></div>
 <canvas id="gl"></canvas>
-
-<div id="text-layer">
-  <div id="main-text"></div>
-  <div id="sub-text"></div>
-</div>
-
+<div id="txt"><div id="t"></div><div id="sub"></div></div>
 <div id="vs"><span>VS</span></div>
-
 <div id="hud">
-  <div class="ch">
-    <div class="ch-name">Google</div>
-    <div class="ch-bars">
-      <div class="bar"><div class="bar-inner h" id="b-g-h"></div></div>
-      <div class="bar"><div class="bar-inner ai" id="b-g-a"></div></div>
-    </div>
-    <div class="ch-legend">human / ai</div>
-  </div>
-  <div class="ch">
-    <div class="ch-name">Meta</div>
-    <div class="ch-bars">
-      <div class="bar"><div class="bar-inner h" id="b-m-h"></div></div>
-      <div class="bar"><div class="bar-inner ai" id="b-m-a"></div></div>
-    </div>
-    <div class="ch-legend">human / ai</div>
-  </div>
-  <div class="ch">
-    <div class="ch-name">Email</div>
-    <div class="ch-bars">
-      <div class="bar"><div class="bar-inner h" id="b-e-h"></div></div>
-      <div class="bar"><div class="bar-inner ai" id="b-e-a"></div></div>
-    </div>
-    <div class="ch-legend">human / ai</div>
-  </div>
+  <div class="ch"><div class="ch-n">Google</div><div class="br"><div class="br-i h" id="gh"></div></div><div class="br"><div class="br-i ai" id="ga"></div></div></div>
+  <div class="ch"><div class="ch-n">Meta</div><div class="br"><div class="br-i h" id="mh"></div></div><div class="br"><div class="br-i ai" id="ma"></div></div></div>
+  <div class="ch"><div class="ch-n">Email</div><div class="br"><div class="br-i h" id="eh"></div></div><div class="br"><div class="br-i ai" id="ea"></div></div></div>
 </div>
+<div id="cta"><p>What metrics prove a brand is actually working?</p><button>Comment your thoughts</button></div>
+<div id="prog"><div id="prog-f"></div></div>
 
-<div id="cta">
-  <p>What metrics prove a brand is actually working?</p>
-  <button>Comment your thoughts</button>
-</div>
-
-<div id="prog"><div id="prog-fill"></div></div>
-
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
-  }
-}
-</script>
-
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
 <script type="module">
-import * as THREE from 'three';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import*as THREE from'three';
+import{EffectComposer}from'three/addons/postprocessing/EffectComposer.js';
+import{RenderPass}from'three/addons/postprocessing/RenderPass.js';
+import{UnrealBloomPass}from'three/addons/postprocessing/UnrealBloomPass.js';
+import{ShaderPass}from'three/addons/postprocessing/ShaderPass.js';
+import{OutputPass}from'three/addons/postprocessing/OutputPass.js';
 
-/* ═══════════════════════════════════════════════════════════════════════
-   CONSTANTS
-   ═══════════════════════════════════════════════════════════════════════ */
-const HUMAN = new THREE.Color(0xff2d6a);
-const AI    = new THREE.Color(0x00c8ff);
-const FIRE  = new THREE.Color(0xff4400);
-const GOLD  = new THREE.Color(0xffcc00);
-const BG    = new THREE.Color(0x030306);
+const W=()=>innerWidth,H=()=>innerHeight;
 
-/* ═══════════════════════════════════════════════════════════════════════
-   RENDERER
-   ═══════════════════════════════════════════════════════════════════════ */
-const canvas = document.getElementById('gl');
-const W = () => window.innerWidth, H = () => window.innerHeight;
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-renderer.setSize(W(), H());
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.9;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
+/* ═══ RENDERER ═══ */
+const cv=document.getElementById('gl');
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+R.setSize(W(),H());R.setPixelRatio(Math.min(devicePixelRatio,2));
+R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.1;
+R.outputColorSpace=THREE.SRGBColorSpace;
 
-const scene = new THREE.Scene();
-scene.background = BG.clone();
+const S=new THREE.Scene();
+S.background=new THREE.Color(0x020204);
+const cam=new THREE.PerspectiveCamera(60,W()/H(),0.1,500);
+cam.position.set(0,0,18);
 
-const camera = new THREE.PerspectiveCamera(55, W() / H(), 0.1, 500);
-camera.position.set(0, 0, 40);
+/* ═══ THE ORGANISM — central living form ═══
+   A high-detail sphere with 5-octave FBM vertex displacement.
+   This is the HERO. It fills the screen. It IS the experience.
+*/
+const ORG_V=`
+uniform float uTime,uMorph,uFire,uConverge,uExplode,uPulse,uScale;
+varying vec3 vN,vW;varying float vFr,vNoise,vSide;
 
-/* ═══════════════════════════════════════════════════════════════════════
-   CUSTOM SHADERS — the heart of the visual experience
-   ═══════════════════════════════════════════════════════════════════════ */
+vec3 mod289(vec3 x){return x-floor(x/289.0)*289.0;}
+vec4 mod289(vec4 x){return x-floor(x/289.0)*289.0;}
+vec4 perm(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+float n3(vec3 p){
+  vec3 a=floor(p),d=p-a;d*=d*(3.0-2.0*d);
+  vec4 b=a.xxyy+vec4(0,1,0,1),k1=perm(b.xyxy),k2=perm(k1.xyxy+b.zzww);
+  vec4 c=k2+a.zzzz,k3=perm(c),k4=perm(c+1.0);
+  vec4 o1=fract(k3/41.0),o2=fract(k4/41.0),o3=o2*d.z+o1*(1.0-d.z);
+  vec2 o4=o3.yw*d.x+o3.xz*(1.0-d.x);
+  return o4.y*d.y+o4.x*(1.0-d.y);
+}
+float fbm(vec3 p){float v=0.0,a=0.5;for(int i=0;i<5;i++){v+=a*n3(p);p=p*2.1+vec3(1.7,9.2,4.1);a*=0.5;}return v;}
 
-// ── Organic Metaball Field (vertex displacement, noise-driven) ──────
-// Two competing organic forms — one human (warm), one AI (cool)
-// They morph, merge, split, and battle based on the script
+void main(){
+  vec3 pos=position*uScale;
+  float n=fbm(pos*1.5+uTime*0.2)*2.0-1.0;
+  float n2=fbm(pos*3.0+uTime*0.4+99.0)*2.0-1.0;
+  vNoise=n;vSide=pos.x;
 
-const FIELD_VERT = `
-  uniform float uTime;
-  uniform float uMorph;     // 0 = sphere, 1 = split into two masses
-  uniform float uFireIntensity;
-  uniform float uConverge;  // 1 = merge to centre
-  uniform vec3 uHumanPos;
-  uniform vec3 uAiPos;
-  varying vec3 vNormal;
-  varying vec3 vWorldPos;
-  varying float vFresnel;
-  varying float vNoise;
-  varying vec2 vUv;
+  // Base organic displacement — LARGE, visible, dramatic
+  float disp=n*1.8+n2*0.6;
 
-  // Simplex-like noise
-  vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
-  vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
-  vec4 perm(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+  // Morph: rip apart into two hemispheres
+  float side=sign(pos.x+0.001);
+  float morphPush=side*uMorph*4.0;
+  // Each half deforms differently
+  disp+=uMorph*n2*1.5*side;
 
-  float noise3(vec3 p){
-    vec3 a=floor(p);vec3 d=p-a;d=d*d*(3.0-2.0*d);
-    vec4 b=a.xxyy+vec4(0.0,1.0,0.0,1.0);
-    vec4 k1=perm(b.xyxy);vec4 k2=perm(k1.xyxy+b.zzww);
-    vec4 c=k2+a.zzzz;vec4 k3=perm(c);vec4 k4=perm(c+1.0);
-    vec4 o1=fract(k3*(1.0/41.0));vec4 o2=fract(k4*(1.0/41.0));
-    vec4 o3=o2*d.z+o1*(1.0-d.z);
-    vec2 o4=o3.yw*d.x+o3.xz*(1.0-d.x);
-    return o4.y*d.y+o4.x*(1.0-d.y);
+  // Fire: violent spikes erupt from surface
+  float fireDisp=uFire*(n2*4.0+sin(uTime*6.0+pos.y*3.0)*2.0);
+  // Tendrils reaching upward
+  fireDisp+=uFire*max(0.0,sin(uTime*4.0+pos.x*5.0))*3.0*smoothstep(-1.0,2.0,pos.y);
+
+  // Explode: vertices shoot outward
+  float explodeDisp=uExplode*n*8.0;
+
+  // Pulse: rhythmic expansion on beat
+  float pulse=uPulse*sin(uTime*8.0)*0.5;
+
+  // Converge: collapse inward
+  float conv=uConverge*(-length(pos)*0.3);
+
+  vec3 displaced=pos+normal*(disp+fireDisp+explodeDisp+pulse+conv);
+  displaced.x+=morphPush;
+
+  vW=(modelMatrix*vec4(displaced,1.0)).xyz;
+  vN=normalize(normalMatrix*(normal+vec3(n*0.3,n2*0.3,n*0.2)));
+  vec3 viewDir=normalize(cameraPosition-vW);
+  vFr=pow(1.0-max(dot(viewDir,vN),0.0),2.5);
+
+  gl_Position=projectionMatrix*modelViewMatrix*vec4(displaced,1.0);
+}`;
+
+const ORG_F=`
+uniform float uTime,uMorph,uFire,uConverge,uEmissive,uDataVis;
+uniform vec3 uHCol,uACol,uFCol;
+varying vec3 vN,vW;varying float vFr,vNoise,vSide;
+
+void main(){
+  // Colour split: human left, AI right — smooth gradient through centre
+  float side=smoothstep(-3.0,3.0,vSide);
+  vec3 base=mix(uHCol,uACol,side);
+
+  // Fire: hot orange bleeds in from surface distortion
+  vec3 fireCol=mix(uFCol,vec3(1.0,0.9,0.3),vFr);
+  base=mix(base,fireCol,uFire*(0.4+vNoise*0.4));
+
+  // Data visualisation mode: circuit-like patterns
+  if(uDataVis>0.01){
+    float grid=step(0.48,fract(vW.x*3.0))+step(0.48,fract(vW.y*3.0));
+    base=mix(base,vec3(0.0,0.8,1.0),uDataVis*grid*0.3);
+    // Scrolling data lines
+    float dataLine=step(0.95,fract(vW.y*8.0-uTime*2.0));
+    base+=vec3(0.0,0.5,1.0)*dataLine*uDataVis*0.5;
   }
 
-  float fbm(vec3 p){
-    float v=0.0;float a=0.5;
-    for(int i=0;i<5;i++){
-      v+=a*noise3(p);
-      p=p*2.1+vec3(1.7,9.2,4.1);
-      a*=0.5;
-    }
-    return v;
-  }
+  // Lighting
+  vec3 L=normalize(vec3(0.5,1.0,0.8));
+  float diff=max(dot(vN,L),0.0)*0.5+0.5;
+  float spec=pow(max(dot(reflect(-L,vN),normalize(cameraPosition-vW)),0.0),32.0);
 
-  void main(){
-    vUv = uv;
-    vec3 pos = position;
+  // Subsurface
+  float sss=pow(max(dot(-vN,L),0.0),1.5)*0.4;
 
-    // Noise displacement — organic, alive
-    float n = fbm(pos * 1.2 + uTime * 0.15) * 2.0 - 1.0;
-    float n2 = fbm(pos * 2.5 + uTime * 0.3 + 100.0) * 2.0 - 1.0;
-    vNoise = n;
+  // Rim: STRONG — this is what makes it read at distance
+  vec3 rimCol=mix(uHCol,uACol,side)*2.0;
+  rimCol=mix(rimCol,uFCol*3.0,uFire);
 
-    // Morph: split into two masses
-    float side = sign(pos.x + 0.001);
-    vec3 offset = vec3(0.0);
-    offset.x += side * uMorph * 6.0;
+  vec3 col=base*diff+rimCol*vFr+base*sss+vec3(1.0)*spec*0.3;
 
-    // Fire: violent displacement
-    float fireDisp = uFireIntensity * n2 * 3.0;
-    offset.y += fireDisp * sin(uTime * 4.0 + pos.x * 2.0);
-    offset.x += uFireIntensity * n * 1.5 * cos(uTime * 3.0 + pos.y);
+  // Emissive core glow
+  float emPulse=sin(uTime*4.0+vW.y*6.0)*0.5+0.5;
+  col+=base*uEmissive*emPulse*0.6;
 
-    // Converge
-    offset = mix(offset, -pos * 0.5, uConverge);
+  // Fire: incandescent edges
+  col+=uFCol*uFire*vFr*3.0;
+  col+=vec3(1.0,0.6,0.1)*uFire*pow(vFr,1.5)*2.0;
 
-    // Organic surface displacement
-    float disp = n * 0.8 + n2 * 0.3;
-    vec3 displaced = pos + normal * disp + offset;
+  gl_FragColor=vec4(col,1.0);
+}`;
 
-    vWorldPos = (modelMatrix * vec4(displaced, 1.0)).xyz;
-    vNormal = normalize(normalMatrix * normal);
-
-    // Fresnel
-    vec3 viewDir = normalize(cameraPosition - vWorldPos);
-    vFresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 3.0);
-
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);
-  }
-`;
-
-const FIELD_FRAG = `
-  uniform float uTime;
-  uniform float uMorph;
-  uniform float uFireIntensity;
-  uniform vec3 uHumanColor;
-  uniform vec3 uAiColor;
-  uniform vec3 uFireColor;
-  uniform float uEmissive;
-  varying vec3 vNormal;
-  varying vec3 vWorldPos;
-  varying float vFresnel;
-  varying float vNoise;
-  varying vec2 vUv;
-
-  void main(){
-    // Colour based on world x-position (human left, AI right)
-    float side = smoothstep(-2.0, 2.0, vWorldPos.x);
-    vec3 baseColor = mix(uHumanColor, uAiColor, side);
-
-    // Fire overlay
-    baseColor = mix(baseColor, uFireColor, uFireIntensity * 0.6 * (0.5 + vNoise * 0.5));
-
-    // Lighting
-    vec3 lightDir = normalize(vec3(0.5, 1.0, 0.8));
-    float diff = max(dot(vNormal, lightDir), 0.0) * 0.6 + 0.4;
-
-    // Rim light
-    vec3 rim = mix(uHumanColor, uAiColor, side) * vFresnel * 1.5;
-
-    // Subsurface-style glow
-    float sss = pow(max(dot(-vNormal, lightDir), 0.0), 2.0) * 0.3;
-
-    vec3 col = baseColor * diff + rim + baseColor * sss;
-
-    // Emissive pulse
-    float pulse = sin(uTime * 3.0 + vWorldPos.y * 5.0) * 0.5 + 0.5;
-    col += baseColor * uEmissive * pulse * 0.4;
-
-    // Hot edges during fire
-    col += uFireColor * uFireIntensity * vFresnel * 2.0;
-
-    gl_FragColor = vec4(col, 0.92);
-  }
-`;
-
-/* ═══════════════════════════════════════════════════════════════════════
-   SCENE OBJECTS
-   ═══════════════════════════════════════════════════════════════════════ */
-
-// ── The organic form — a high-detail icosphere with custom shader ────
-const fieldUniforms = {
-  uTime:          { value: 0 },
-  uMorph:         { value: 0 },
-  uFireIntensity: { value: 0 },
-  uConverge:      { value: 0 },
-  uHumanPos:      { value: new THREE.Vector3(-6, 0, 0) },
-  uAiPos:         { value: new THREE.Vector3(6, 0, 0) },
-  uHumanColor:    { value: HUMAN.clone() },
-  uAiColor:       { value: AI.clone() },
-  uFireColor:     { value: FIRE.clone() },
-  uEmissive:      { value: 0 },
+const orgU={
+  uTime:{value:0},uMorph:{value:0},uFire:{value:0},
+  uConverge:{value:0},uExplode:{value:0},uPulse:{value:0},
+  uEmissive:{value:0},uScale:{value:1},uDataVis:{value:0},
+  uHCol:{value:new THREE.Color(0xff1a5e)},
+  uACol:{value:new THREE.Color(0x00d4ff)},
+  uFCol:{value:new THREE.Color(0xff3300)},
 };
 
-const fieldMat = new THREE.ShaderMaterial({
-  uniforms: fieldUniforms,
-  vertexShader: FIELD_VERT,
-  fragmentShader: FIELD_FRAG,
-  transparent: true,
-  side: THREE.DoubleSide,
-  depthWrite: true,
-});
-
-const fieldGeom = new THREE.IcosahedronGeometry(8, 64);
-const field = new THREE.Mesh(fieldGeom, fieldMat);
-scene.add(field);
-
-// ── Ember particle system — thousands of tiny glowing sparks ────────
-const EMBER_COUNT = 6000;
-const emberGeom = new THREE.BufferGeometry();
-const ePos = new Float32Array(EMBER_COUNT * 3);
-const eVel = new Float32Array(EMBER_COUNT * 3);
-const ePhase = new Float32Array(EMBER_COUNT);
-const eSize = new Float32Array(EMBER_COUNT);
-const eSide = new Float32Array(EMBER_COUNT); // -1 human, +1 ai, 0 neutral
-
-for (let i = 0; i < EMBER_COUNT; i++) {
-  const i3 = i * 3;
-  const theta = Math.random() * Math.PI * 2;
-  const phi = Math.acos(Math.random() * 2 - 1);
-  const r = 8 + Math.random() * 30;
-  ePos[i3]     = r * Math.sin(phi) * Math.cos(theta);
-  ePos[i3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-  ePos[i3 + 2] = r * Math.cos(phi) - 10;
-  eVel[i3]     = (Math.random() - 0.5) * 0.03;
-  eVel[i3 + 1] = (Math.random() - 0.5) * 0.03;
-  eVel[i3 + 2] = (Math.random() - 0.5) * 0.02;
-  ePhase[i] = Math.random() * Math.PI * 2;
-  eSize[i] = 0.3 + Math.random() * 1.5;
-  eSide[i] = i < EMBER_COUNT / 3 ? -1 : (i < EMBER_COUNT * 2 / 3 ? 1 : 0);
-}
-emberGeom.setAttribute('position', new THREE.BufferAttribute(ePos, 3));
-emberGeom.setAttribute('aPhase', new THREE.BufferAttribute(ePhase, 1));
-emberGeom.setAttribute('aSize', new THREE.BufferAttribute(eSize, 1));
-emberGeom.setAttribute('aSide', new THREE.BufferAttribute(eSide, 1));
-
-const emberMat = new THREE.ShaderMaterial({
-  uniforms: {
-    uTime:      { value: 0 },
-    uIntensity: { value: 0.4 },
-    uMorph:     { value: 0 },
-    uFire:      { value: 0 },
-    uConverge:  { value: 0 },
-    uDataMode:  { value: 0 },
-    uHumanCol:  { value: HUMAN.clone() },
-    uAiCol:     { value: AI.clone() },
-    uFireCol:   { value: FIRE.clone() },
-  },
-  vertexShader: `
-    attribute float aPhase;
-    attribute float aSize;
-    attribute float aSide;
-    uniform float uTime;
-    uniform float uIntensity;
-    uniform float uMorph;
-    uniform float uFire;
-    uniform float uConverge;
-    uniform float uDataMode;
-    varying vec3 vCol;
-    varying float vAlpha;
-
-    void main(){
-      vec3 pos = position;
-
-      // Breathing
-      float breath = sin(uTime * 0.4 + aPhase) * 0.5 + 0.5;
-      pos += normalize(pos) * breath * 1.5;
-
-      // Morph: separate into two swarms
-      if(uMorph > 0.01){
-        float pull = aSide * uMorph * 10.0;
-        pos.x += pull;
-      }
-
-      // Fire: chaotic upward motion
-      if(uFire > 0.01){
-        pos.y += sin(uTime * 5.0 + aPhase * 3.0) * uFire * 6.0;
-        pos.x += cos(uTime * 4.0 + aPhase * 2.0) * uFire * 3.0;
-        pos.z += sin(uTime * 3.0 + aPhase) * uFire * 2.0;
-      }
-
-      // Data mode: organise into streams
-      if(uDataMode > 0.01){
-        float stream = floor(aPhase * 3.0);
-        float streamX = (stream - 1.0) * 12.0;
-        pos.x = mix(pos.x, streamX + sin(pos.y * 0.2 + uTime) * 2.0, uDataMode);
-        pos.y = mod(pos.y - uTime * 8.0, 60.0) - 30.0;
-        pos.z = mix(pos.z, -5.0 + cos(aPhase * 10.0 + uTime) * 3.0, uDataMode);
-      }
-
-      // Converge
-      if(uConverge > 0.01){
-        pos = mix(pos, vec3(0.0, 0.0, -5.0), uConverge * 0.6);
-      }
-
-      vec4 mv = modelViewMatrix * vec4(pos, 1.0);
-      gl_PointSize = aSize * uIntensity * (180.0 / -mv.z);
-      gl_Position = projectionMatrix * mv;
-
-      // Colour: side-based
-      vec3 humanC = vec3(1.0, 0.176, 0.416);
-      vec3 aiC = vec3(0.0, 0.784, 1.0);
-      vec3 fireC = vec3(1.0, 0.267, 0.0);
-      vec3 col = aSide < -0.5 ? humanC : (aSide > 0.5 ? aiC : mix(humanC, aiC, 0.5));
-      col = mix(col, fireC, uFire * 0.7);
-
-      vCol = col;
-      vAlpha = uIntensity * (0.5 + breath * 0.5) * smoothstep(60.0, 5.0, length(pos));
-    }
-  `,
-  fragmentShader: `
-    varying vec3 vCol;
-    varying float vAlpha;
-    void main(){
-      float d = length(gl_PointCoord - 0.5);
-      if(d > 0.5) discard;
-      float a = smoothstep(0.5, 0.05, d) * vAlpha;
-      gl_FragColor = vec4(vCol, a * 0.85);
-    }
-  `,
-  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-});
-
-const embers = new THREE.Points(emberGeom, emberMat);
-scene.add(embers);
-
-// ── Data rain particles — vertical streams for metrics moments ──────
-const RAIN_COUNT = 2000;
-const rainGeom = new THREE.BufferGeometry();
-const rPos = new Float32Array(RAIN_COUNT * 3);
-const rPhase = new Float32Array(RAIN_COUNT);
-const rStream = new Float32Array(RAIN_COUNT);
-for (let i = 0; i < RAIN_COUNT; i++) {
-  rPos[i*3]   = (Math.random()-0.5)*60;
-  rPos[i*3+1] = Math.random()*60 - 30;
-  rPos[i*3+2] = (Math.random()-0.5)*20 - 10;
-  rPhase[i] = Math.random() * Math.PI * 2;
-  rStream[i] = Math.floor(Math.random() * 3); // 0=google, 1=meta, 2=email
-}
-rainGeom.setAttribute('position', new THREE.BufferAttribute(rPos, 3));
-rainGeom.setAttribute('aPhase', new THREE.BufferAttribute(rPhase, 1));
-rainGeom.setAttribute('aStream', new THREE.BufferAttribute(rStream, 1));
-
-const rainMat = new THREE.ShaderMaterial({
-  uniforms: {
-    uTime: { value: 0 },
-    uActive: { value: 0 },
-  },
-  vertexShader: `
-    attribute float aPhase;
-    attribute float aStream;
-    uniform float uTime;
-    uniform float uActive;
-    varying float vAlpha;
-    varying vec3 vCol;
-    void main(){
-      vec3 pos = position;
-      // Three vertical streams
-      float streamX = (aStream - 1.0) * 14.0;
-      pos.x = mix(pos.x, streamX + sin(uTime * 0.5 + aPhase) * 3.0, uActive);
-      pos.y = mod(pos.y - uTime * 12.0, 60.0) - 30.0;
-      pos.z = mix(pos.z, -8.0, uActive * 0.5);
-      vec4 mv = modelViewMatrix * vec4(pos, 1.0);
-      float size = mix(0.3, 1.8, uActive);
-      gl_PointSize = size * (120.0 / -mv.z);
-      gl_Position = projectionMatrix * mv;
-      // Stream colours
-      vec3 cols[3];
-      cols[0] = vec3(0.26, 0.52, 0.96); // Google blue
-      cols[1] = vec3(0.0, 0.78, 1.0);    // Meta cyan
-      cols[2] = vec3(1.0, 0.8, 0.0);     // Email gold
-      int idx = int(aStream);
-      vCol = idx == 0 ? cols[0] : (idx == 1 ? cols[1] : cols[2]);
-      vAlpha = uActive * 0.7;
-    }
-  `,
-  fragmentShader: `
-    varying float vAlpha;
-    varying vec3 vCol;
-    void main(){
-      vec2 c = gl_PointCoord - 0.5;
-      // Elongated vertically — data streaks
-      float d = length(c * vec2(1.0, 0.3));
-      if(d > 0.5) discard;
-      gl_FragColor = vec4(vCol, smoothstep(0.5, 0.0, d) * vAlpha);
-    }
-  `,
-  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-});
-const rain = new THREE.Points(rainGeom, rainMat);
-scene.add(rain);
-
-// ── Lock object (procedural — built from geometry) ──────────────────
-const lockGrp = new THREE.Group();
-const lockBodyMat = new THREE.MeshStandardMaterial({
-  color: 0xff2200, emissive: 0xff2200, emissiveIntensity: 0.6,
-  metalness: 0.9, roughness: 0.15,
-});
-const lockBody = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4, 1.2, 4, 4, 2), lockBodyMat);
-// Keyhole — boolean-ish via a dark cylinder
-const keyholeMat = new THREE.MeshStandardMaterial({
-  color: 0x030306, metalness: 0, roughness: 1, emissive: 0x000000,
-});
-const keyhole = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.3, 16), keyholeMat);
-keyhole.rotation.x = Math.PI / 2;
-keyhole.position.set(0, -0.3, 0);
-lockBody.add(keyhole);
-const keyholeSlot = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.2, 1.3), keyholeMat);
-keyholeSlot.position.set(0, -1.0, 0);
-lockBody.add(keyholeSlot);
-lockGrp.add(lockBody);
-const shackleMat = new THREE.MeshStandardMaterial({
-  color: 0xcc4400, emissive: 0x881100, emissiveIntensity: 0.3,
-  metalness: 0.95, roughness: 0.1,
-});
-const shackle = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.35, 12, 24, Math.PI), shackleMat);
-shackle.position.set(0, 2, 0);
-lockGrp.add(shackle);
-lockGrp.position.set(0, 0, 8);
-lockGrp.visible = false;
-scene.add(lockGrp);
-
-// ── Question mark ───────────────────────────────────────────────────
-const qGrp = new THREE.Group();
-const qMat = new THREE.MeshStandardMaterial({
-  color: 0xffcc00, emissive: 0xffaa00, emissiveIntensity: 0.7,
-  metalness: 0.8, roughness: 0.1,
-});
-const qArc = new THREE.Mesh(new THREE.TorusGeometry(2.2, 0.4, 12, 24, Math.PI * 1.6), qMat);
-qArc.rotation.z = Math.PI * 0.3;
-qArc.position.y = 0.5;
-qGrp.add(qArc);
-const qStem = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 1.5, 12), qMat.clone());
-qStem.position.set(0.6, -2.0, 0);
-qGrp.add(qStem);
-const qDot = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 16), qMat.clone());
-qDot.position.set(0.6, -3.5, 0);
-qGrp.add(qDot);
-qGrp.position.set(0, 0, 8);
-qGrp.visible = false;
-scene.add(qGrp);
-
-// ── Arena ring ──────────────────────────────────────────────────────
-const ringMat = new THREE.MeshStandardMaterial({
-  color: 0x6ec6ff, emissive: 0x00aaff, emissiveIntensity: 0.4,
-  metalness: 1, roughness: 0.2, transparent: true, opacity: 0.7,
-});
-const ringMesh = new THREE.Mesh(new THREE.TorusGeometry(12, 0.06, 8, 128), ringMat);
-ringMesh.rotation.x = Math.PI / 2;
-ringMesh.visible = false;
-scene.add(ringMesh);
-
-// Second ring — fire coloured
-const ring2Mat = ringMat.clone();
-ring2Mat.color = FIRE.clone();
-ring2Mat.emissive = FIRE.clone();
-ring2Mat.emissiveIntensity = 0.3;
-const ring2 = new THREE.Mesh(new THREE.TorusGeometry(14, 0.04, 8, 128), ring2Mat);
-ring2.rotation.x = Math.PI / 2;
-ring2.visible = false;
-scene.add(ring2);
-
-/* ═══════════════════════════════════════════════════════════════════════
-   LIGHTING
-   ═══════════════════════════════════════════════════════════════════════ */
-const ambLight = new THREE.AmbientLight(0x0a0a1a, 0.3);
-scene.add(ambLight);
-
-const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
-mainLight.position.set(5, 10, 10);
-scene.add(mainLight);
-
-const humanLight = new THREE.PointLight(HUMAN, 0, 80);
-humanLight.position.set(-20, 0, 10);
-scene.add(humanLight);
-
-const aiLight = new THREE.PointLight(AI, 0, 80);
-aiLight.position.set(20, 0, 10);
-scene.add(aiLight);
-
-const fireLight = new THREE.PointLight(FIRE, 0, 60);
-fireLight.position.set(0, -5, 15);
-scene.add(fireLight);
-
-/* ═══════════════════════════════════════════════════════════════════════
-   POST-PROCESSING
-   ═══════════════════════════════════════════════════════════════════════ */
-const composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
-
-const bloom = new UnrealBloomPass(
-  new THREE.Vector2(W(), H()), 1.2, 0.5, 0.75
+const org=new THREE.Mesh(
+  new THREE.IcosahedronGeometry(5,80),
+  new THREE.ShaderMaterial({uniforms:orgU,vertexShader:ORG_V,fragmentShader:ORG_F,side:THREE.DoubleSide})
 );
-composer.addPass(bloom);
+S.add(org);
 
-const chromaShader = {
-  uniforms: { tDiffuse:{value:null}, uStr:{value:0.003} },
-  vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-  fragmentShader: `
-    uniform sampler2D tDiffuse;uniform float uStr;varying vec2 vUv;
+/* ═══ EMBERS — 8000 particles that swarm around the organism ═══ */
+const EC=8000;
+const eG=new THREE.BufferGeometry();
+const eP=new Float32Array(EC*3),ePh=new Float32Array(EC),eSz=new Float32Array(EC),eSd=new Float32Array(EC);
+for(let i=0;i<EC;i++){
+  const th=Math.random()*Math.PI*2,ph=Math.acos(Math.random()*2-1);
+  const r=5+Math.random()*12;
+  eP[i*3]=r*Math.sin(ph)*Math.cos(th);eP[i*3+1]=r*Math.sin(ph)*Math.sin(th);eP[i*3+2]=r*Math.cos(ph);
+  ePh[i]=Math.random()*6.28;eSz[i]=0.4+Math.random()*2.0;
+  eSd[i]=i<EC/3?-1:(i<EC*2/3?1:0);
+}
+eG.setAttribute('position',new THREE.BufferAttribute(eP,3));
+eG.setAttribute('aP',new THREE.BufferAttribute(ePh,1));
+eG.setAttribute('aS',new THREE.BufferAttribute(eSz,1));
+eG.setAttribute('aSd',new THREE.BufferAttribute(eSd,1));
+
+const eM=new THREE.ShaderMaterial({
+  uniforms:{
+    uTime:{value:0},uInt:{value:0.5},uMorph:{value:0},uFire:{value:0},
+    uConv:{value:0},uData:{value:0},uOrbit:{value:0.5},
+  },
+  vertexShader:`
+    attribute float aP,aS,aSd;
+    uniform float uTime,uInt,uMorph,uFire,uConv,uData,uOrbit;
+    varying vec3 vC;varying float vA;
     void main(){
-      vec2 d=vUv-0.5;float dist=dot(d,d);float o=uStr*dist;
-      gl_FragColor=vec4(
-        texture2D(tDiffuse,vUv+d*o).r,
-        texture2D(tDiffuse,vUv).g,
-        texture2D(tDiffuse,vUv-d*o).b,
-        1.0
-      );
-    }
-  `,
-};
-const chromaPass = new ShaderPass(chromaShader);
-composer.addPass(chromaPass);
-
-const vigShader = {
-  uniforms: { tDiffuse:{value:null}, uDark:{value:0.55}, uTint:{value:new THREE.Color(0x050010)} },
-  vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-  fragmentShader: `
-    uniform sampler2D tDiffuse;uniform float uDark;uniform vec3 uTint;varying vec2 vUv;
-    void main(){
-      vec4 c=texture2D(tDiffuse,vUv);
-      vec2 uv=(vUv-0.5)*2.0;
-      float v=1.0-dot(uv,uv)*0.4;
-      v=clamp(pow(max(v,0.0),uDark),0.0,1.0);
-      c.rgb=mix(uTint,c.rgb,v);
-      gl_FragColor=c;
-    }
-  `,
-};
-composer.addPass(new ShaderPass(vigShader));
-composer.addPass(new OutputPass());
-
-/* ═══════════════════════════════════════════════════════════════════════
-   VOICEOVER — Web Speech API (drop-in for ElevenLabs later)
-   ═══════════════════════════════════════════════════════════════════════ */
-let voice = null;
-function loadVoices() {
-  const vs = speechSynthesis.getVoices();
-  voice = vs.find(v => /Daniel|Google UK Male|Alex|Aaron/i.test(v.name) && /en/i.test(v.lang))
-    || vs.find(v => /en-(GB|US)/i.test(v.lang) && !/female/i.test(v.name))
-    || vs.find(v => /en/i.test(v.lang)) || vs[0];
-}
-speechSynthesis.onvoiceschanged = loadVoices;
-loadVoices();
-
-function speak(text, rate = 0.9, pitch = 0.8) {
-  if (!voice) return;
-  const u = new SpeechSynthesisUtterance(text);
-  u.voice = voice; u.rate = rate; u.pitch = pitch; u.volume = 1;
-  speechSynthesis.speak(u);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   SCRIPT TIMELINE
-   ═══════════════════════════════════════════════════════════════════════ */
-const cues = [
-  { t:0,   d:4.5, say:"Welcome to Day SIX of our journey.",
-    html:'Welcome to Day <span class="w f">SIX</span>',
-    sub:'of our journey.', mode:'intro', rate:0.82, pitch:0.7 },
-
-  { t:5.5, d:3.5, say:"ONE brand, crafted by human hands.",
-    html:'<span class="w h">ONE</span> brand',
-    sub:'crafted by human hands.', mode:'human', rate:0.9, pitch:0.85 },
-
-  { t:10, d:3, say:"ONE, generated by A.I.",
-    html:'<span class="w a">ONE</span> generated by A.I.',
-    sub:'', mode:'ai', rate:0.9, pitch:0.85 },
-
-  { t:14, d:4, say:"Same constraints. Same timeline.",
-    html:'Same constraints.<br/>Same timeline.',
-    sub:'', mode:'split', rate:1.0, pitch:0.95 },
-
-  { t:19, d:4.5, say:"We are watching, who survives the fire.",
-    html:'We are watching...<br/>who survives the <span class="w f">fire</span>.',
-    sub:'', mode:'fire', rate:0.78, pitch:0.65 },
-
-  { t:24.5, d:2.5, say:"To win, you need to PERFORM.",
-    html:'To win, you need to<br/><span class="w g">PERFORM</span>.',
-    sub:'', mode:'perform', rate:1.1, pitch:0.95 },
-
-  { t:28, d:5, say:"Three channels. Google. Meta. Email.",
-    html:'Three channels.<br/><span class="a">Google.</span> <span class="a">Meta.</span> <span class="a">Email.</span>',
-    sub:'', mode:'channels', rate:1.08, pitch:0.95 },
-
-  { t:34, d:4, say:"Same creative volume. Same spend. Same conditions.",
-    html:'Same creative volume.<br/>Same spend. Same conditions.',
-    sub:'', mode:'equalise', rate:1.0, pitch:0.95 },
-
-  { t:39, d:4, say:"Both brands go head-to-head, across ALL THREE.",
-    html:'Both brands go <span class="f">head-to-head</span>...<br/>across <span class="w">ALL THREE</span>.',
-    sub:'', mode:'battle', rate:0.85, pitch:0.75 },
-
-  { t:44.5, d:3.5, say:"Category ONE is performance.",
-    html:'Category <span class="w g">ONE</span>',
-    sub:'is performance.', mode:'cat1', rate:0.9, pitch:0.85 },
-
-  { t:49, d:4, say:"HARD DATA. Clicks, conversions, results.",
-    html:'<span class="w num">HARD DATA.</span><br/>Clicks... conversions... results.',
-    sub:'', mode:'metrics', rate:0.9, pitch:0.85 },
-
-  { t:54, d:3.5, say:"The stuff that ACTUALLY pays the bills.",
-    html:'The stuff that <span class="g">ACTUALLY</span><br/>pays the bills.',
-    sub:'', mode:'metrics2', rate:0.88, pitch:0.82 },
-
-  { t:58.5, d:2, say:"No opinions. Just numbers.",
-    html:'No opinions.<br/><span class="w a num">Just numbers.</span>',
-    sub:'', mode:'numbers', rate:1.05, pitch:0.95 },
-
-  { t:62, d:2.5, say:"Category TWO?",
-    html:'<span class="l">Category TWO?</span>',
-    sub:'', mode:'mystery', rate:0.72, pitch:0.55 },
-
-  { t:65.5, d:4, say:"We're keeping THAT one, locked, for now.",
-    html:"We're keeping that one...<br/><span class=\"f\">locked</span>... for now.",
-    sub:'', mode:'locked', rate:0.9, pitch:0.85 },
-
-  { t:70.5, d:3.5, say:"It will reveal itself, when the time is right.",
-    html:'It will reveal itself...<br/>when the time is right.',
-    sub:'', mode:'reveal', rate:0.78, pitch:0.65 },
-
-  { t:75.5, d:3.5, say:"WE handle the operational data gathering.",
-    html:'<span class="w">WE</span> handle the operational<br/>data gathering.',
-    sub:'', mode:'operational', rate:0.9, pitch:0.85 },
-
-  { t:80, d:3, say:"But YOU, set the benchmark.",
-    html:'But <span class="w g">YOU</span> set the benchmark.',
-    sub:'', mode:'you', rate:0.9, pitch:0.85 },
-
-  { t:84, d:4, say:"What METRICS prove a brand is actually working?",
-    html:'What <span class="a">METRICS</span> prove<br/>a brand is actually working?',
-    sub:'', mode:'question', rate:0.88, pitch:0.82 },
-
-  { t:89, d:2.5, say:"Comment your thoughts below.",
-    html:'Comment your thoughts below.',
-    sub:'', mode:'cta', rate:0.9, pitch:0.85 },
-
-  { t:92.5, d:4, say:"See you again, soon.",
-    html:'See you again...<br/><span class="a">soon.</span>',
-    sub:'', mode:'outro', rate:0.85, pitch:0.8 },
-];
-
-const TOTAL = 98;
-
-/* ═══════════════════════════════════════════════════════════════════════
-   VISUAL STATE + MODE HANDLERS
-   ═══════════════════════════════════════════════════════════════════════ */
-const vs = {
-  morph: 0, fire: 0, converge: 0, emissive: 0,
-  emberIntensity: 0.4, emberMorph: 0, emberFire: 0, emberConverge: 0, emberDataMode: 0,
-  rainActive: 0,
-  bloomStr: 1.2, chromaStr: 0.003,
-  camX: 0, camY: 0, camZ: 40, camShake: 0,
-  bgR: 0.012, bgG: 0.012, bgB: 0.024,
-  humanLightI: 0, aiLightI: 0, fireLightI: 0,
-  ringVis: false, ring2Vis: false,
-  lockVis: false, qVis: false,
-  fieldScale: 1,
-};
-
-const mainText = document.getElementById('main-text');
-const subText = document.getElementById('sub-text');
-const vsEl = document.getElementById('vs');
-const hudEl = document.getElementById('hud');
-const ctaEl = document.getElementById('cta');
-const progFill = document.getElementById('prog-fill');
-
-function bars(gh,ga,mh,ma,eh,ea) {
-  document.getElementById('b-g-h').style.width = gh+'%';
-  document.getElementById('b-g-a').style.width = ga+'%';
-  document.getElementById('b-m-h').style.width = mh+'%';
-  document.getElementById('b-m-a').style.width = ma+'%';
-  document.getElementById('b-e-h').style.width = eh+'%';
-  document.getElementById('b-e-a').style.width = ea+'%';
-}
-
-function resetVS() {
-  vs.morph = 0; vs.fire = 0; vs.converge = 0; vs.emissive = 0;
-  vs.emberMorph = 0; vs.emberFire = 0; vs.emberConverge = 0; vs.emberDataMode = 0;
-  vs.rainActive = 0;
-  vs.camShake = 0;
-  vs.humanLightI = 0; vs.aiLightI = 0; vs.fireLightI = 0;
-  vs.ringVis = false; vs.ring2Vis = false;
-  vs.lockVis = false; vs.qVis = false;
-  vs.fieldScale = 1;
-  vs.bloomStr = 1.2; vs.chromaStr = 0.003;
-  vs.bgR = 0.012; vs.bgG = 0.012; vs.bgB = 0.024;
-  hudEl.classList.remove('on'); ctaEl.classList.remove('on');
-  vsEl.style.opacity = '0';
-  lockGrp.visible = false; qGrp.visible = false;
-  ringMesh.visible = false; ring2.visible = false;
-}
-
-const modes = {
-  intro()  { vs.emissive = 0.6; vs.bloomStr = 1.8; vs.camShake = 0.015; vs.emberIntensity = 0.6; },
-  human()  { vs.morph = 0.3; vs.emberMorph = 0.3; vs.humanLightI = 4; vs.camX = -4; },
-  ai()     { vs.morph = 0.3; vs.emberMorph = 0.3; vs.aiLightI = 4; vs.camX = 4; },
-  split()  { vs.morph = 0.8; vs.emberMorph = 0.8; vs.humanLightI = 2.5; vs.aiLightI = 2.5; vs.camX = 0; vs.ringVis = true; },
-  fire()   { vs.fire = 1; vs.emberFire = 1; vs.fireLightI = 6; vs.bloomStr = 2.2; vs.chromaStr = 0.012; vs.camShake = 0.06; vs.bgR = 0.04; },
-  perform(){ vsEl.style.opacity = '1'; setTimeout(() => vsEl.style.opacity = '0', 1800); vs.camShake = 0.03; vs.bloomStr = 1.8; vs.emissive = 0.8; },
-  channels(){ vs.rainActive = 0.7; vs.emberDataMode = 0.4; hudEl.classList.add('on'); bars(42,38,55,48,40,45); vs.ringVis = true; vs.ring2Vis = true; },
-  equalise(){ vs.rainActive = 0.5; hudEl.classList.add('on'); bars(50,50,50,50,50,50); vs.emberDataMode = 0.6; },
-  battle() { vs.fire = 0.5; vs.emberFire = 0.4; vs.morph = 0.6; vs.emberMorph = 0.5; vs.fireLightI = 3; vs.humanLightI = 2; vs.aiLightI = 2; hudEl.classList.add('on'); bars(68,58,72,62,52,58); vs.bloomStr = 1.6; vs.ringVis = true; vs.ring2Vis = true; },
-  cat1()   { vs.rainActive = 0.8; vs.emberDataMode = 0.5; vs.bloomStr = 1.0; hudEl.classList.add('on'); },
-  metrics(){ vs.rainActive = 1; vs.emberDataMode = 0.8; hudEl.classList.add('on'); bars(75,65,80,68,58,70); vs.emissive = 0.3; },
-  metrics2(){ vs.rainActive = 0.9; vs.emberDataMode = 0.7; hudEl.classList.add('on'); },
-  numbers(){ vs.rainActive = 1; vs.emberDataMode = 1; vs.bloomStr = 0.8; vs.chromaStr = 0.005; vs.bgR = 0.02; vs.bgG = 0.02; vs.bgB = 0.04; },
-  mystery(){ vs.emberIntensity = 0.25; vs.bloomStr = 0.6; vs.qVis = true; vs.fieldScale = 0.5; },
-  locked() { vs.lockVis = true; vs.qVis = false; vs.fireLightI = 2; vs.chromaStr = 0.006; vs.fire = 0.2; vs.emberFire = 0.15; },
-  reveal() { vs.lockVis = false; vs.emberIntensity = 0.3; vs.bloomStr = 0.7; vs.fieldScale = 0.6; },
-  operational(){ vs.rainActive = 0.5; vs.emberDataMode = 0.4; vs.emberIntensity = 0.5; },
-  you()    { vs.converge = 0.6; vs.emberConverge = 0.5; vs.bloomStr = 1.8; vs.emissive = 1.0; vs.emberIntensity = 1.0; vs.camZ = 32; },
-  question(){ vs.qVis = true; vs.bloomStr = 1.2; vs.emissive = 0.4; vs.fieldScale = 0.7; },
-  cta()    { ctaEl.classList.add('on'); vs.qVis = false; vs.emberIntensity = 0.4; vs.bloomStr = 0.9; },
-  outro()  { vs.emberIntensity = 0.2; vs.bloomStr = 0.6; vs.fieldScale = 0.8; ctaEl.classList.remove('on'); hudEl.classList.remove('on'); },
-};
-
-/* ═══════════════════════════════════════════════════════════════════════
-   EXPERIENCE ENGINE
-   ═══════════════════════════════════════════════════════════════════════ */
-let running = false, startT = 0, curCue = -1;
-
-function fireCue(c) {
-  resetVS();
-  mainText.innerHTML = c.html;
-  mainText.classList.add('on');
-  if (c.sub) { subText.textContent = c.sub; subText.classList.add('on'); }
-  else subText.classList.remove('on');
-  speak(c.say, c.rate, c.pitch);
-  if (modes[c.mode]) modes[c.mode]();
-  // Fade out near end
-  setTimeout(() => { mainText.classList.remove('on'); subText.classList.remove('on'); }, c.d * 1000 - 600);
-}
-
-function go() {
-  document.getElementById('start').classList.add('off');
-  startT = performance.now() / 1000;
-  running = true; curCue = -1;
-  speechSynthesis.cancel();
-}
-document.getElementById('start').addEventListener('click', go);
-
-/* ═══════════════════════════════════════════════════════════════════════
-   RENDER LOOP
-   ═══════════════════════════════════════════════════════════════════════ */
-const clock = new THREE.Clock();
-const lerp = (a, b, t) => a + (b - a) * t;
-
-function animate() {
-  requestAnimationFrame(animate);
-  const t = clock.getElapsedTime();
-  const dt = Math.min(clock.getDelta(), 0.05);
-
-  if (running) {
-    const el = performance.now() / 1000 - startT;
-    progFill.style.width = (Math.min(el / TOTAL, 1) * 100) + '%';
-    for (let i = 0; i < cues.length; i++) {
-      if (el >= cues[i].t && el < cues[i].t + cues[i].d && i !== curCue) {
-        curCue = i;
-        fireCue(cues[i]);
+      vec3 p=position;
+      // Orbit around the organism
+      float angle=uTime*uOrbit*0.3+aP;
+      float r=length(p.xz);
+      p.x=cos(angle)*r;p.z=sin(angle)*r;
+      // Breathe
+      p+=normalize(p)*sin(uTime*0.5+aP)*1.5;
+      // Morph: swarm separates
+      p.x+=aSd*uMorph*8.0;
+      // Fire: chaotic eruption
+      if(uFire>0.01){
+        p.y+=sin(uTime*6.0+aP*4.0)*uFire*8.0;
+        p.x+=cos(uTime*5.0+aP*3.0)*uFire*4.0;
+        p.z+=sin(uTime*4.0+aP*2.0)*uFire*3.0;
       }
+      // Data: streams
+      if(uData>0.01){
+        float stream=floor(aP*3.0/6.28);
+        p.x=mix(p.x,(stream-1.0)*10.0+sin(p.y*0.3+uTime)*2.0,uData);
+        p.y=mod(p.y-uTime*10.0,40.0)-20.0;
+      }
+      // Converge
+      p=mix(p,vec3(0),uConv*0.7);
+      vec4 mv=modelViewMatrix*vec4(p,1.0);
+      gl_PointSize=aS*uInt*(250.0/-mv.z);
+      gl_Position=projectionMatrix*mv;
+      vec3 hC=vec3(1.0,0.1,0.37),aC=vec3(0.0,0.83,1.0),fC=vec3(1.0,0.2,0.0);
+      vC=aSd<-0.5?hC:(aSd>0.5?aC:mix(hC,aC,0.5));
+      vC=mix(vC,fC,uFire*0.8);
+      vA=uInt*(0.4+sin(uTime*0.6+aP)*0.3)*smoothstep(30.0,3.0,length(p));
     }
-    if (el >= TOTAL) { running = false; resetVS(); mainText.classList.remove('on'); }
-  }
-
-  const sp = 0.04; // smoothing speed
-
-  // ── Field uniforms ──────────────────────────────────────────────
-  fieldUniforms.uTime.value = t;
-  fieldUniforms.uMorph.value = lerp(fieldUniforms.uMorph.value, vs.morph, sp);
-  fieldUniforms.uFireIntensity.value = lerp(fieldUniforms.uFireIntensity.value, vs.fire, sp);
-  fieldUniforms.uConverge.value = lerp(fieldUniforms.uConverge.value, vs.converge, sp);
-  fieldUniforms.uEmissive.value = lerp(fieldUniforms.uEmissive.value, vs.emissive, sp);
-
-  // Field scale
-  const ts = lerp(field.scale.x, vs.fieldScale, sp);
-  field.scale.setScalar(ts);
-  field.rotation.y += dt * 0.08;
-  field.rotation.x = Math.sin(t * 0.1) * 0.15;
-
-  // ── Ember uniforms ──────────────────────────────────────────────
-  emberMat.uniforms.uTime.value = t;
-  emberMat.uniforms.uIntensity.value = lerp(emberMat.uniforms.uIntensity.value, vs.emberIntensity, sp);
-  emberMat.uniforms.uMorph.value = lerp(emberMat.uniforms.uMorph.value, vs.emberMorph, sp);
-  emberMat.uniforms.uFire.value = lerp(emberMat.uniforms.uFire.value, vs.emberFire, sp);
-  emberMat.uniforms.uConverge.value = lerp(emberMat.uniforms.uConverge.value, vs.emberConverge, sp);
-  emberMat.uniforms.uDataMode.value = lerp(emberMat.uniforms.uDataMode.value, vs.emberDataMode, sp);
-
-  // ── Rain ────────────────────────────────────────────────────────
-  rainMat.uniforms.uTime.value = t;
-  rainMat.uniforms.uActive.value = lerp(rainMat.uniforms.uActive.value, vs.rainActive, sp);
-
-  // ── Geometric objects ───────────────────────────────────────────
-  ringMesh.visible = vs.ringVis;
-  ring2.visible = vs.ring2Vis;
-  if (ringMesh.visible) { ringMesh.rotation.z += dt * 0.2; ringMat.emissiveIntensity = 0.4 + Math.sin(t * 2) * 0.2; }
-  if (ring2.visible) { ring2.rotation.z -= dt * 0.15; }
-
-  lockGrp.visible = vs.lockVis;
-  if (lockGrp.visible) {
-    lockGrp.rotation.y += dt * 0.4;
-    lockGrp.position.y = Math.sin(t * 1.2) * 0.6;
-    lockBodyMat.emissiveIntensity = 0.6 + Math.sin(t * 3) * 0.3;
-  }
-
-  qGrp.visible = vs.qVis;
-  if (qGrp.visible) {
-    qGrp.rotation.y += dt * 0.25;
-    qGrp.position.y = Math.sin(t * 0.8) * 1.0;
-    qGrp.scale.setScalar(1 + Math.sin(t * 1.5) * 0.08);
-  }
-
-  // ── Camera ──────────────────────────────────────────────────────
-  camera.position.x = lerp(camera.position.x, vs.camX + Math.sin(t * 0.12) * 2, sp);
-  camera.position.y = lerp(camera.position.y, vs.camY + Math.sin(t * 0.15) * 1.5, sp);
-  camera.position.z = lerp(camera.position.z, vs.camZ + Math.sin(t * 0.1) * 2, sp);
-  if (vs.camShake > 0.001) {
-    camera.position.x += (Math.random() - 0.5) * vs.camShake * 2;
-    camera.position.y += (Math.random() - 0.5) * vs.camShake * 2;
-    vs.camShake *= 0.97;
-  }
-  camera.lookAt(0, 0, 0);
-
-  // ── Lights ──────────────────────────────────────────────────────
-  humanLight.intensity = lerp(humanLight.intensity, vs.humanLightI, sp);
-  aiLight.intensity = lerp(aiLight.intensity, vs.aiLightI, sp);
-  fireLight.intensity = lerp(fireLight.intensity, vs.fireLightI, sp);
-
-  // ── Background ──────────────────────────────────────────────────
-  scene.background.r = lerp(scene.background.r, vs.bgR, sp);
-  scene.background.g = lerp(scene.background.g, vs.bgG, sp);
-  scene.background.b = lerp(scene.background.b, vs.bgB, sp);
-
-  // ── Post-processing ────────────────────────────────────────────
-  bloom.strength = lerp(bloom.strength, vs.bloomStr, sp);
-  chromaPass.uniforms.uStr.value = lerp(chromaPass.uniforms.uStr.value, vs.chromaStr, sp);
-
-  composer.render();
-}
-animate();
-
-/* ═══ Resize ═══ */
-let rT;
-window.addEventListener('resize', () => {
-  clearTimeout(rT);
-  rT = setTimeout(() => {
-    camera.aspect = W() / H();
-    camera.updateProjectionMatrix();
-    renderer.setSize(W(), H());
-    composer.setSize(W(), H());
-  }, 150);
+  `,
+  fragmentShader:`
+    varying vec3 vC;varying float vA;
+    void main(){
+      float d=length(gl_PointCoord-0.5);if(d>0.5)discard;
+      gl_FragColor=vec4(vC,smoothstep(0.5,0.0,d)*vA*0.9);
+    }
+  `,
+  transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
 });
+S.add(new THREE.Points(eG,eM));
+
+/* ═══ LOCK — procedural, imposing ═══ */
+const lockG=new THREE.Group();
+const lkM=new THREE.MeshStandardMaterial({color:0xff2200,emissive:0xff1100,emissiveIntensity:0.8,metalness:0.95,roughness:0.1});
+lockG.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(4,5,1.5,4,4,2),lkM),{position:new THREE.Vector3(0,0,0)}));
+// Keyhole
+const khM=new THREE.MeshStandardMaterial({color:0x020204,emissive:0x000000,metalness:0,roughness:1});
+const kh=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,1.6,16),khM);
+kh.rotation.x=Math.PI/2;kh.position.set(0,-0.2,0);lockG.children[0].add(kh);
+const ks=new THREE.Mesh(new THREE.BoxGeometry(0.3,1.5,1.6),khM);
+ks.position.set(0,-1.2,0);lockG.children[0].add(ks);
+// Shackle
+const shM=new THREE.MeshStandardMaterial({color:0xcc3300,emissive:0x991100,emissiveIntensity:0.5,metalness:0.95,roughness:0.08});
+lockG.add(Object.assign(new THREE.Mesh(new THREE.TorusGeometry(1.8,0.4,12,24,Math.PI),shM),{position:new THREE.Vector3(0,2.5,0)}));
+lockG.position.z=5;lockG.visible=false;
+S.add(lockG);
+
+/* ═══ LIGHTING ═══ */
+S.add(new THREE.AmbientLight(0x080818,0.4));
+const dL=new THREE.DirectionalLight(0xffffff,0.6);dL.position.set(5,10,8);S.add(dL);
+const hL=new THREE.PointLight(0xff1a5e,0,60);hL.position.set(-15,0,8);S.add(hL);
+const aL=new THREE.PointLight(0x00d4ff,0,60);aL.position.set(15,0,8);S.add(aL);
+const fL=new THREE.PointLight(0xff3300,0,50);fL.position.set(0,-3,12);S.add(fL);
+
+/* ═══ POST-PROCESSING ═══ */
+const comp=new EffectComposer(R);
+comp.addPass(new RenderPass(S,cam));
+const bloom=new UnrealBloomPass(new THREE.Vector2(W(),H()),1.5,0.4,0.7);
+comp.addPass(bloom);
+const chroma={
+  uniforms:{tDiffuse:{value:null},u:{value:0.003}},
+  vertexShader:`varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader:`uniform sampler2D tDiffuse;uniform float u;varying vec2 v;void main(){vec2 d=v-0.5;float l=dot(d,d);float o=u*l;gl_FragColor=vec4(texture2D(tDiffuse,v+d*o).r,texture2D(tDiffuse,v).g,texture2D(tDiffuse,v-d*o).b,1.0);}`,
+};
+const cP=new ShaderPass(chroma);comp.addPass(cP);
+const vig={
+  uniforms:{tDiffuse:{value:null},uD:{value:0.5},uT:{value:new THREE.Color(0x030008)}},
+  vertexShader:`varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader:`uniform sampler2D tDiffuse;uniform float uD;uniform vec3 uT;varying vec2 v;void main(){vec4 c=texture2D(tDiffuse,v);vec2 u=(v-0.5)*2.0;float vi=1.0-dot(u,u)*0.35;c.rgb=mix(uT,c.rgb,clamp(pow(max(vi,0.0),uD),0.0,1.0));gl_FragColor=c;}`,
+};
+comp.addPass(new ShaderPass(vig));
+comp.addPass(new OutputPass());
+
+/* ═══ VOICE ═══ */
+let vc=null;
+function loadV(){const vs=speechSynthesis.getVoices();vc=vs.find(v=>/Daniel|Google UK Male|Alex|Aaron/i.test(v.name)&&/en/i.test(v.lang))||vs.find(v=>/en-(GB|US)/i.test(v.lang)&&!/female/i.test(v.name))||vs.find(v=>/en/i.test(v.lang))||vs[0];}
+speechSynthesis.onvoiceschanged=loadV;loadV();
+function say(txt,rate=0.9,pitch=0.8){if(!vc)return;const u=new SpeechSynthesisUtterance(txt);u.voice=vc;u.rate=rate;u.pitch=pitch;u.volume=1;speechSynthesis.speak(u);}
+
+/* ═══ SCRIPT — TIGHT timing, zero dead air ═══ */
+const Q=[
+// t    d   say                                           html                                                                    sub                      mode        rate pitch
+{t:0,  d:3.5,say:"Welcome to Day SIX of our journey.",   html:'Welcome to Day <span class="b f">SIX</span>',                     sub:'of our journey.',   m:'intro',   r:.82,p:.7},
+{t:3.8,d:2.8,say:"ONE brand, crafted by human hands.",   html:'<span class="b h">ONE</span> brand',                              sub:'crafted by human hands.',m:'human',r:.92,p:.85},
+{t:7,  d:2.5,say:"ONE, generated by A.I.",                html:'<span class="b a">ONE</span> generated by A.I.',                  sub:'',                  m:'ai',      r:.92,p:.85},
+{t:10, d:2.8,say:"Same constraints. Same timeline.",      html:'Same constraints. Same timeline.',                                 sub:'',                  m:'split',   r:1.0,p:.95},
+{t:13.2,d:3.5,say:"We are watching, who survives the fire.",html:'Who survives the <span class="b f">fire</span>.',               sub:'',                  m:'fire',    r:.78,p:.65},
+{t:17, d:2.2,say:"To win, you need to PERFORM.",          html:'<span class="b g">PERFORM</span>.',                               sub:'',                  m:'perform', r:1.12,p:.95},
+{t:19.5,d:3.8,say:"Three channels. Google. Meta. Email.", html:'<span class="a">Google.</span> <span class="a">Meta.</span> <span class="a">Email.</span>',sub:'',      m:'channels',r:1.1,p:.95},
+{t:23.8,d:3,  say:"Same creative volume. Same spend. Same conditions.",html:'Same volume. Same spend.<br/>Same conditions.',       sub:'',                  m:'equal',   r:1.02,p:.95},
+{t:27.2,d:3.2,say:"Both brands go head-to-head, across ALL THREE.",html:'<span class="f">Head-to-head</span> across <span class="b">ALL THREE</span>.',sub:'',m:'battle',r:.85,p:.75},
+{t:30.8,d:2.5,say:"Category ONE is performance.",         html:'Category <span class="b g">ONE</span>',                           sub:'performance.',      m:'cat1',    r:.92,p:.85},
+{t:33.8,d:3,  say:"HARD DATA. Clicks, conversions, results.",html:'<span class="b mono">HARD DATA.</span>',                       sub:'Clicks. Conversions. Results.',m:'data',r:.92,p:.85},
+{t:37.2,d:2.8,say:"The stuff that ACTUALLY pays the bills.",html:'<span class="g">ACTUALLY</span> pays the bills.',               sub:'',                  m:'data2',   r:.88,p:.82},
+{t:40.3,d:2,  say:"No opinions. Just numbers.",            html:'<span class="b a mono">Just numbers.</span>',                     sub:'',                  m:'numbers', r:1.05,p:.95},
+{t:42.8,d:2,  say:"Category TWO?",                        html:'<span class="i">Category TWO?</span>',                            sub:'',                  m:'mystery', r:.7,p:.5},
+{t:45.2,d:3.2,say:"We're keeping THAT one, locked, for now.",html:'<span class="f">Locked</span>... for now.',                    sub:'',                  m:'locked',  r:.92,p:.85},
+{t:48.8,d:3,  say:"It will reveal itself, when the time is right.",html:'When the time is right.',                                sub:'',                  m:'reveal',  r:.78,p:.65},
+{t:52.2,d:2.8,say:"WE handle the operational data gathering.",html:'<span class="b">WE</span> handle the data.',                  sub:'',                  m:'ops',     r:.92,p:.85},
+{t:55.5,d:2.5,say:"But YOU, set the benchmark.",           html:'<span class="b g">YOU</span> set the benchmark.',                 sub:'',                  m:'you',     r:.9,p:.85},
+{t:58.5,d:3.2,say:"What METRICS prove a brand is actually working?",html:'What <span class="a">METRICS</span> prove it?',         sub:'',                  m:'question',r:.88,p:.82},
+{t:62,  d:2.2,say:"Comment your thoughts below.",          html:'Your thoughts.',                                                  sub:'',                  m:'cta',     r:.92,p:.85},
+{t:64.5,d:3.5,say:"See you again, soon.",                  html:'See you <span class="a">soon</span>.',                            sub:'',                  m:'outro',   r:.85,p:.8},
+];
+const TOTAL=69;
+
+/* ═══ VISUAL STATE ═══ */
+const v={
+  morph:0,fire:0,conv:0,explode:0,pulse:0,emissive:0,scale:1,dataVis:0,
+  eInt:.5,eMorph:0,eFire:0,eConv:0,eData:0,eOrbit:.5,
+  bloom:1.5,chroma:.003,
+  camX:0,camY:0,camZ:18,camShake:0,
+  hL:0,aL:0,fL:0,
+  lockVis:false,
+  bgCol:new THREE.Color(0x020204),
+};
+
+const tE=document.getElementById('t'),sE=document.getElementById('sub');
+const vsE=document.getElementById('vs'),hudE=document.getElementById('hud');
+const ctaE=document.getElementById('cta'),pF=document.getElementById('prog-f');
+
+function setBars(a,b,c,d,e,f){
+  document.getElementById('gh').style.width=a+'%';document.getElementById('ga').style.width=b+'%';
+  document.getElementById('mh').style.width=c+'%';document.getElementById('ma').style.width=d+'%';
+  document.getElementById('eh').style.width=e+'%';document.getElementById('ea').style.width=f+'%';
+}
+
+function rst(){
+  Object.assign(v,{morph:0,fire:0,conv:0,explode:0,pulse:0,emissive:0,scale:1,dataVis:0,
+    eMorph:0,eFire:0,eConv:0,eData:0,eOrbit:.5,
+    bloom:1.5,chroma:.003,camShake:0,hL:0,aL:0,fL:0,lockVis:false});
+  v.bgCol.set(0x020204);
+  hudE.classList.remove('on');ctaE.classList.remove('on');
+  vsE.style.opacity='0';lockG.visible=false;
+}
+
+/* ═══ MODE HANDLERS — each one is a distinct visual world ═══ */
+const M={
+  intro(){v.emissive=.8;v.bloom=2.0;v.pulse=.6;v.camShake=.02;v.eInt=.7;v.camZ=16;},
+  human(){
+    // Organism leans left, human hemisphere glows hot pink
+    v.morph=.5;v.eMorph=.4;v.hL=5;v.camX=-3;v.camZ=14;
+    v.emissive=.4;v.scale=1.1;
+  },
+  ai(){
+    // Lean right, AI hemisphere pulses cyan
+    v.morph=.5;v.eMorph=.4;v.aL=5;v.camX=3;v.camZ=14;
+    v.emissive=.4;v.scale=1.1;
+  },
+  split(){
+    // TEAR APART — two halves rip away from each other
+    v.morph=1;v.eMorph=1;v.hL=3;v.aL=3;v.camX=0;v.camZ=22;
+    v.scale=1.2;v.bloom=1.8;
+  },
+  fire(){
+    // ERUPTION — spikes, tendrils, camera shakes violently
+    v.fire=1;v.eFire=1;v.fL=8;v.bloom=2.8;v.chroma=.015;
+    v.camShake=.08;v.scale=1.3;v.emissive=.6;v.eInt=1;
+    v.bgCol.set(0x0a0200);
+    // Punch animation on text
+    tE.classList.remove('punch');void tE.offsetWidth;tE.classList.add('punch');
+  },
+  perform(){
+    // VS flash — organism EXPLODES outward momentarily
+    vsE.style.opacity='1';
+    v.explode=.5;v.camShake=.05;v.bloom=2.5;v.pulse=1;v.eInt=1;
+    setTimeout(()=>{vsE.style.opacity='0';},1500);
+    setTimeout(()=>{v.explode=0;},800);
+  },
+  channels(){
+    // Data streams form — organism shows circuit patterns
+    v.dataVis=.6;v.eData=.6;hudE.classList.add('on');
+    setBars(42,38,55,48,40,45);v.aL=2;v.hL=2;v.camZ=20;v.bloom=1.2;
+  },
+  equal(){
+    v.dataVis=.8;v.eData=.7;hudE.classList.add('on');
+    setBars(50,50,50,50,50,50);v.camZ=22;
+  },
+  battle(){
+    // WAR — split + fire + data overlay
+    v.morph=.7;v.fire=.4;v.eMorph=.6;v.eFire=.3;v.dataVis=.3;
+    v.hL=3;v.aL=3;v.fL=4;v.bloom=2;v.camShake=.03;v.scale=1.15;
+    hudE.classList.add('on');setBars(68,58,72,62,52,58);
+  },
+  cat1(){
+    v.dataVis=.5;v.eData=.4;v.emissive=.5;v.bloom=1.4;
+    hudE.classList.add('on');v.camZ=16;
+  },
+  data(){
+    // Full data visualisation — organism becomes a data sculpture
+    v.dataVis=1;v.eData=1;v.bloom=1.2;v.aL=3;
+    hudE.classList.add('on');setBars(75,65,80,68,58,70);v.camZ=18;
+    v.emissive=.3;
+  },
+  data2(){v.dataVis=.9;v.eData=.8;hudE.classList.add('on');v.emissive=.4;},
+  numbers(){
+    // Clinical — stripped back, monochrome with cyan accents
+    v.dataVis=1;v.eData=1;v.bloom=.8;v.chroma=.005;
+    v.bgCol.set(0x040408);v.aL=2;v.camZ=20;
+  },
+  mystery(){
+    // Organism shrinks, darkens — everything pulls away
+    v.scale=.4;v.eInt=.15;v.bloom=.5;v.emissive=.1;
+    v.camZ=25;v.bgCol.set(0x020204);
+  },
+  locked(){
+    // LOCK appears through the organism — fire accent
+    v.lockVis=true;v.fire=.15;v.fL=3;v.chroma=.008;
+    v.scale=.6;v.eInt=.3;v.eFire=.1;v.bloom=1.2;
+  },
+  reveal(){
+    // Slow expansion — something is building
+    v.scale=.7;v.eInt=.3;v.bloom=.8;v.emissive=.2;
+    v.lockVis=false;v.camZ=22;
+  },
+  ops(){
+    v.dataVis=.5;v.eData=.4;v.eInt=.5;v.scale=.9;v.bloom=1;v.camZ=18;
+  },
+  you(){
+    // MASSIVE — organism fills entire screen, converges, glows
+    v.conv=.5;v.eConv=.6;v.bloom=2.5;v.emissive=1;
+    v.eInt=1.2;v.scale=1.4;v.camZ=12;v.pulse=.8;
+    v.hL=2;v.aL=2;
+    tE.classList.remove('punch');void tE.offsetWidth;tE.classList.add('punch');
+  },
+  question(){
+    v.scale=.8;v.emissive=.5;v.bloom=1.3;v.eInt=.4;v.camZ=18;
+  },
+  cta(){
+    ctaE.classList.add('on');v.scale=.7;v.eInt=.3;v.bloom=.9;v.camZ=22;
+  },
+  outro(){
+    v.eInt=.2;v.bloom=.6;v.scale=.6;v.emissive=.1;
+    ctaE.classList.remove('on');hudE.classList.remove('on');v.camZ=24;
+  },
+};
+
+/* ═══ ENGINE ═══ */
+let run=false,t0=0,cur=-1;
+function fire(c){
+  rst();
+  tE.innerHTML=c.html;tE.classList.add('on');
+  if(c.sub){sE.textContent=c.sub;sE.classList.add('on');}else sE.classList.remove('on');
+  say(c.say,c.r,c.p);
+  if(M[c.m])M[c.m]();
+  setTimeout(()=>{tE.classList.remove('on');sE.classList.remove('on');},c.d*1000-400);
+}
+document.getElementById('go').addEventListener('click',()=>{
+  document.getElementById('go').classList.add('off');
+  t0=performance.now()/1000;run=true;cur=-1;speechSynthesis.cancel();
+});
+
+/* ═══ RENDER ═══ */
+const clk=new THREE.Clock();
+const lp=(a,b,t)=>a+(b-a)*t;
+
+function anim(){
+  requestAnimationFrame(anim);
+  const t=clk.getElapsedTime(),dt=Math.min(clk.getDelta(),.05);
+  const sp=.06; // Fast lerp for snappy response
+
+  if(run){
+    const el=performance.now()/1000-t0;
+    pF.style.width=(Math.min(el/TOTAL,1)*100)+'%';
+    for(let i=0;i<Q.length;i++){
+      if(el>=Q[i].t&&el<Q[i].t+Q[i].d&&i!==cur){cur=i;fire(Q[i]);}
+    }
+    if(el>=TOTAL){run=false;rst();tE.classList.remove('on');}
+  }
+
+  // ── Organism ──
+  orgU.uTime.value=t;
+  orgU.uMorph.value=lp(orgU.uMorph.value,v.morph,sp);
+  orgU.uFire.value=lp(orgU.uFire.value,v.fire,sp);
+  orgU.uConverge.value=lp(orgU.uConverge.value,v.conv,sp);
+  orgU.uExplode.value=lp(orgU.uExplode.value,v.explode,sp);
+  orgU.uPulse.value=lp(orgU.uPulse.value,v.pulse,sp);
+  orgU.uEmissive.value=lp(orgU.uEmissive.value,v.emissive,sp);
+  orgU.uScale.value=lp(orgU.uScale.value,v.scale,sp);
+  orgU.uDataVis.value=lp(orgU.uDataVis.value,v.dataVis,sp);
+
+  org.rotation.y+=dt*0.12;
+  org.rotation.x=Math.sin(t*0.08)*0.1;
+
+  // ── Embers ──
+  eM.uniforms.uTime.value=t;
+  eM.uniforms.uInt.value=lp(eM.uniforms.uInt.value,v.eInt,sp);
+  eM.uniforms.uMorph.value=lp(eM.uniforms.uMorph.value,v.eMorph,sp);
+  eM.uniforms.uFire.value=lp(eM.uniforms.uFire.value,v.eFire,sp);
+  eM.uniforms.uConv.value=lp(eM.uniforms.uConv.value,v.eConv,sp);
+  eM.uniforms.uData.value=lp(eM.uniforms.uData.value,v.eData,sp);
+  eM.uniforms.uOrbit.value=lp(eM.uniforms.uOrbit.value,v.eOrbit,sp);
+
+  // ── Lock ──
+  lockG.visible=v.lockVis;
+  if(lockG.visible){
+    lockG.rotation.y+=dt*0.5;
+    lockG.position.y=Math.sin(t*1.5)*0.8;
+    lkM.emissiveIntensity=0.8+Math.sin(t*4)*0.4;
+  }
+
+  // ── Camera — close, intimate, reactive ──
+  cam.position.x=lp(cam.position.x,v.camX+Math.sin(t*0.15)*1.5,sp);
+  cam.position.y=lp(cam.position.y,v.camY+Math.sin(t*0.18)*1.0,sp);
+  cam.position.z=lp(cam.position.z,v.camZ,sp);
+  if(v.camShake>.001){
+    cam.position.x+=(Math.random()-.5)*v.camShake*3;
+    cam.position.y+=(Math.random()-.5)*v.camShake*3;
+    v.camShake*=0.96;
+  }
+  cam.lookAt(0,0,0);
+
+  // ── Lights ──
+  hL.intensity=lp(hL.intensity,v.hL,sp);
+  aL.intensity=lp(aL.intensity,v.aL,sp);
+  fL.intensity=lp(fL.intensity,v.fL,sp);
+
+  // ── Background ──
+  S.background.lerp(v.bgCol,sp);
+
+  // ── Post ──
+  bloom.strength=lp(bloom.strength,v.bloom,sp);
+  cP.uniforms.u.value=lp(cP.uniforms.u.value,v.chroma,sp);
+
+  comp.render();
+}
+anim();
+
+let rT;window.addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(()=>{
+  cam.aspect=W()/H();cam.updateProjectionMatrix();R.setSize(W(),H());comp.setSize(W(),H());
+},150);});
 </script>
 </body>
 </html>
