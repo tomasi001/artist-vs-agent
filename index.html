@@ -342,7 +342,9 @@ const ks=new THREE.Mesh(new THREE.BoxGeometry(0.3,1.5,1.6),khM);
 ks.position.set(0,-1.2,0);lockG.children[0].add(ks);
 // Shackle
 const shM=new THREE.MeshStandardMaterial({color:0xcc3300,emissive:0x991100,emissiveIntensity:0.5,metalness:0.95,roughness:0.08});
-lockG.add(Object.assign(new THREE.Mesh(new THREE.TorusGeometry(1.8,0.4,12,24,Math.PI),shM),{position:new THREE.Vector3(0,2.5,0)}));
+const shackle=new THREE.Mesh(new THREE.TorusGeometry(1.8,0.4,12,24,Math.PI),shM);
+shackle.position.set(0,2.5,0);
+lockG.add(shackle);
 lockG.position.z=5;lockG.visible=false;
 S.add(lockG);
 
