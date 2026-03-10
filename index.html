@@ -10,100 +10,50 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --f:'Inter',system-ui,sans-serif;
-  --m:'JetBrains Mono',monospace;
+  --f:'Inter',system-ui,sans-serif;--m:'JetBrains Mono',monospace;
   --human:#ff1a5e;--ai:#00d4ff;--fire:#ff3300;--gold:#ffbb00;
 }
 html,body{font-family:var(--f);background:#000;color:#fff;overflow:hidden;width:100%;height:100%;-webkit-font-smoothing:antialiased}
-
-/* ═══ 9:16 FRAME — all content lives inside this ═══ */
-#frame{
-  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-  overflow:hidden;background:#020204;
-}
+#frame{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);overflow:hidden;background:#020204}
 canvas#gl{position:absolute;inset:0;width:100%;height:100%}
-
-/* Text overlay */
-#txt{
-  position:absolute;inset:0;z-index:10;
-  display:flex;align-items:center;justify-content:center;
-  flex-direction:column;pointer-events:none;padding:0 6vw;
-}
-#t{
-  font-weight:100;font-size:clamp(2rem,8vw,5.5rem);
-  line-height:1.0;letter-spacing:-0.05em;text-align:center;
-  opacity:0;transform:scale(0.92);
-  transition:opacity 0.25s ease,transform 0.25s ease;
-  mix-blend-mode:difference;
-}
+#txt{position:absolute;top:4%;left:0;right:0;height:38%;z-index:10;display:flex;align-items:center;justify-content:center;flex-direction:column;pointer-events:none;padding:0 6vw}
+#t{font-weight:100;font-size:clamp(1.8rem,7.5vw,5rem);line-height:1.05;letter-spacing:-0.04em;text-align:center;opacity:0;transform:scale(0.92);transition:opacity 0.25s ease,transform 0.25s ease;mix-blend-mode:difference}
 #t.on{opacity:1;transform:scale(1)}
 #t.punch{transition:none;animation:punch 0.3s ease-out}
 @keyframes punch{0%{transform:scale(1.15);opacity:1}100%{transform:scale(1);opacity:1}}
-#t .h{color:var(--human)}
-#t .a{color:var(--ai)}
-#t .f{color:var(--fire)}
-#t .g{color:var(--gold)}
-#t .b{font-weight:900}
-#t .i{font-style:italic;font-weight:200;opacity:0.7}
-#t .mono{font-family:var(--m);letter-spacing:0.04em}
-#sub{
-  font-weight:300;font-size:clamp(0.7rem,2vw,1rem);
-  color:rgba(255,255,255,0.3);margin-top:8px;text-align:center;
-  opacity:0;transition:opacity 0.3s ease 0.1s;letter-spacing:0.03em;
-}
+#t .h{color:var(--human)}#t .a{color:var(--ai)}#t .f{color:var(--fire)}#t .g{color:var(--gold)}
+#t .b{font-weight:900}#t .i{font-style:italic;font-weight:200;opacity:0.7}#t .mono{font-family:var(--m);letter-spacing:0.04em}
+#sub{font-weight:300;font-size:clamp(0.65rem,1.8vw,0.95rem);color:rgba(255,255,255,0.3);margin-top:6px;text-align:center;opacity:0;transition:opacity 0.3s ease 0.1s;letter-spacing:0.03em}
 #sub.on{opacity:1}
-
-/* VS flash */
-#vs{
-  position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;
-  pointer-events:none;opacity:0;
-  background:radial-gradient(circle,rgba(255,26,94,0.15),transparent 70%);
-}
-#vs span{
-  font-family:var(--m);font-weight:900;font-size:clamp(8rem,30vw,18rem);
-  background:linear-gradient(135deg,var(--human),var(--fire));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  filter:drop-shadow(0 0 80px rgba(255,26,94,0.7));
-}
-
-/* HUD */
-#hud{
-  position:absolute;bottom:60px;left:50%;transform:translateX(-50%);
-  z-index:12;pointer-events:none;display:flex;gap:20px;
-  opacity:0;transition:opacity 0.3s ease;
-}
+#vs{position:absolute;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;background:radial-gradient(circle,rgba(255,26,94,0.15),transparent 70%)}
+#vs span{font-family:var(--m);font-weight:900;font-size:clamp(7rem,28vw,16rem);background:linear-gradient(135deg,var(--human),var(--fire));-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 80px rgba(255,26,94,0.7))}
+#met{position:absolute;top:42%;left:0;right:0;z-index:11;display:flex;justify-content:center;gap:10%;opacity:0;transition:opacity 0.4s;pointer-events:none}
+#met.on{opacity:1}
+.mc{font-family:var(--m);font-size:9px;letter-spacing:0.08em;color:rgba(255,255,255,0.35);text-align:center;line-height:1.6}
+#met .h{color:var(--human);font-weight:700}#met .a{color:var(--ai);font-weight:700}
+.mc-ch{font-size:7px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:2px}
+#hud{position:absolute;bottom:55px;left:50%;transform:translateX(-50%);z-index:12;pointer-events:none;display:flex;gap:18px;opacity:0;transition:opacity 0.3s ease}
 #hud.on{opacity:1}
-.ch{text-align:center}
-.ch-n{font-family:var(--m);font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:6px}
-.br{width:60px;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin:2px 0}
+.ch{text-align:center}.ch-n{font-family:var(--m);font-size:7px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:5px}
+.br{width:50px;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin:2px 0}
 .br-i{height:100%;border-radius:2px;width:0%;transition:width 0.8s cubic-bezier(.22,1,.36,1)}
 .br-i.h{background:var(--human)}.br-i.ai{background:var(--ai)}
-
-/* CTA */
-#cta{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);z-index:14;text-align:center;opacity:0;transition:opacity 0.4s ease;pointer-events:auto}
+#cta{position:absolute;bottom:45px;left:50%;transform:translateX(-50%);z-index:14;text-align:center;opacity:0;transition:opacity 0.4s;pointer-events:auto}
 #cta.on{opacity:1}
-#cta p{font-weight:300;font-size:0.8rem;color:rgba(255,255,255,0.4);margin-bottom:10px}
-#cta button{background:none;border:1px solid var(--ai);color:var(--ai);padding:8px 24px;border-radius:3px;font-family:var(--f);font-size:11px;font-weight:400;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
-#cta button:hover{background:var(--ai);color:#020204}
-
-/* Progress */
+#cta p{font-weight:300;font-size:0.75rem;color:rgba(255,255,255,0.4);margin-bottom:8px}
+#cta button{background:none;border:1px solid var(--ai);color:var(--ai);padding:7px 20px;border-radius:3px;font-family:var(--f);font-size:10px;font-weight:400;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
 #prog{position:absolute;bottom:0;left:0;width:100%;height:2px;z-index:20;background:rgba(255,255,255,0.02)}
 #prog-f{height:100%;width:0%;background:linear-gradient(90deg,var(--human),var(--ai));transition:width 0.15s linear}
-
-/* Start */
 #go{position:absolute;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#020204;cursor:pointer;transition:opacity 0.5s}
 #go.off{opacity:0;pointer-events:none}
-#go .day{font-family:var(--m);font-weight:700;font-size:10px;color:var(--fire);letter-spacing:0.25em;text-transform:uppercase;margin-bottom:8px}
-#go h1{font-weight:100;font-size:clamp(1.8rem,6vw,3.5rem);letter-spacing:-0.04em}
-#go .p{font-weight:300;font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:0.12em;text-transform:uppercase;margin-top:14px;animation:br 2s ease-in-out infinite}
+#go .day{font-family:var(--m);font-weight:700;font-size:9px;color:var(--fire);letter-spacing:0.25em;text-transform:uppercase;margin-bottom:6px}
+#go h1{font-weight:100;font-size:clamp(1.6rem,5.5vw,3rem);letter-spacing:-0.04em}
+#go .p{font-weight:300;font-size:10px;color:rgba(255,255,255,0.25);letter-spacing:0.12em;text-transform:uppercase;margin-top:12px;animation:br 2s ease-in-out infinite}
 @keyframes br{0%,100%{opacity:0.25}50%{opacity:0.7}}
-
-/* Replay */
 #replay{position:absolute;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;flex-direction:column;pointer-events:none;opacity:0;transition:opacity 0.5s}
 #replay.on{opacity:1;pointer-events:auto}
-#replay button{background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);padding:10px 28px;border-radius:3px;font-family:var(--f);font-size:11px;font-weight:300;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:12px}
-#replay button:hover{border-color:var(--ai);color:var(--ai)}
-#replay .end{font-weight:100;font-size:clamp(1.2rem,4vw,2.4rem);letter-spacing:-0.03em;text-align:center;opacity:0.5}
+#replay button{background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);padding:8px 24px;border-radius:3px;font-family:var(--f);font-size:10px;font-weight:300;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;margin-top:10px}
+#replay .end{font-weight:100;font-size:clamp(1rem,3.5vw,2rem);letter-spacing:-0.03em;text-align:center;opacity:0.5}
 </style>
 </head>
 <body>
@@ -112,6 +62,11 @@ canvas#gl{position:absolute;inset:0;width:100%;height:100%}
 <div id="go"><div class="day">Day 6</div><h1>Artist vs Agent</h1><div class="p">Tap to begin</div></div>
 <div id="txt"><div id="t"></div><div id="sub"></div></div>
 <div id="vs"><span>VS</span></div>
+<div id="met">
+  <div class="mc"><div class="mc-ch">Google</div><span class="h">3.2%</span> CTR <span class="a">2.8%</span></div>
+  <div class="mc"><div class="mc-ch">Meta</div><span class="h">2.4x</span> ROAS <span class="a">2.1x</span></div>
+  <div class="mc"><div class="mc-ch">Email</div><span class="h">847</span> Conv <span class="a">712</span></div>
+</div>
 <div id="hud">
   <div class="ch"><div class="ch-n">Google</div><div class="br"><div class="br-i h" id="gh"></div></div><div class="br"><div class="br-i ai" id="ga"></div></div></div>
   <div class="ch"><div class="ch-n">Meta</div><div class="br"><div class="br-i h" id="mh"></div></div><div class="br"><div class="br-i ai" id="ma"></div></div></div>
@@ -131,197 +86,103 @@ import{UnrealBloomPass}from'three/addons/postprocessing/UnrealBloomPass.js';
 import{ShaderPass}from'three/addons/postprocessing/ShaderPass.js';
 import{OutputPass}from'three/addons/postprocessing/OutputPass.js';
 
-console.log('[AvA] Module loaded — Three.js r183');
-
 const isMobile=navigator.maxTouchPoints>0;
-const dpr=Math.min(devicePixelRatio,isMobile?1.5:2);
-const GEO_DETAIL=isMobile?32:48;
-const P_COUNT=isMobile?5000:8000;
+const P_COUNT=isMobile?4000:7000;
 const frame=document.getElementById('frame');
 
-/* ═══ 9:16 SIZING ═══ */
 function getFrameSize(){
   const vw=innerWidth,vh=innerHeight,ratio=9/16;
   let w,h;
-  if(vw/vh>ratio){h=vh;w=Math.floor(h*ratio);}
-  else{w=vw;h=Math.floor(w/ratio);}
+  if(vw/vh>ratio){h=vh;w=Math.floor(h*ratio);}else{w=vw;h=Math.floor(w/ratio);}
   if(h>vh){h=vh;w=Math.floor(h*ratio);}
   return{w,h};
 }
 
 try{
 
-/* ═══ RENDERER ═══ */
 const cv=document.getElementById('gl');
 const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
-R.setPixelRatio(dpr);
+R.setPixelRatio(Math.min(devicePixelRatio,isMobile?1.5:2));
 R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.1;
 R.outputColorSpace=THREE.SRGBColorSpace;
 
-const S=new THREE.Scene();
-S.background=new THREE.Color(0x020204);
-const cam=new THREE.PerspectiveCamera(60,9/16,0.1,500);
-cam.position.set(0,0,18);
+const Sc=new THREE.Scene();
+Sc.background=new THREE.Color(0x020204);
+const cam=new THREE.PerspectiveCamera(55,9/16,0.1,500);
+cam.position.set(0,0,16);
 
 const{w:fw,h:fh}=getFrameSize();
 frame.style.width=fw+'px';frame.style.height=fh+'px';
 R.setSize(fw,fh);
 
-/* ═══ ORGANISM — VERTEX SHADER ═══
-   Domain-warped 5-octave FBM with per-mode deformations.
-   This creates flowing, organic displacement — not "a sphere with noise on it".
-*/
-const ORG_V=`
-uniform float uTime,uMorph,uFire,uConverge,uExplode,uPulse,uScale,uDataVis;
-varying vec3 vN,vW;varying float vFr,vNoise,vSide,vDisp;
+/* ═══ GRID PLATFORM — holographic data surface ═══ */
+const platMat=new THREE.ShaderMaterial({
+  uniforms:{uTime:{value:0},uOp:{value:0},uCol:{value:new THREE.Color(0x004466)}},
+  vertexShader:`varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader:`
+    uniform float uTime,uOp;uniform vec3 uCol;varying vec2 vU;
+    void main(){
+      vec2 g=(vU-0.5)*20.0;
+      vec2 f=abs(fract(g)-0.5)/fwidth(g);
+      float line=1.0-min(min(f.x,f.y),1.0);
+      float dist=length(vU-0.5)*2.0;
+      float pulse=sin(dist*8.0-uTime*2.0)*0.5+0.5;
+      float fade=smoothstep(1.0,0.3,dist);
+      float a=(line*0.5+pulse*0.15)*fade*uOp;
+      gl_FragColor=vec4(uCol*(1.0+pulse*0.3),a);
+    }`,
+  transparent:true,side:THREE.DoubleSide,depthWrite:false,
+});
+const platform=new THREE.Mesh(new THREE.PlaneGeometry(30,30),platMat);
+platform.rotation.x=-Math.PI/2;platform.position.y=-6;
+Sc.add(platform);
 
-vec3 mod289v3(vec3 x){return x-floor(x/289.0)*289.0;}
-vec4 mod289v4(vec4 x){return x-floor(x/289.0)*289.0;}
-vec4 perm(vec4 x){return mod289v4(((x*34.0)+1.0)*x);}
-float n3(vec3 p){
-  vec3 a=floor(p),d=p-a;d*=d*(3.0-2.0*d);
-  vec4 b=a.xxyy+vec4(0,1,0,1),k1=perm(b.xyxy),k2=perm(k1.xyxy+b.zzww);
-  vec4 c=k2+a.zzzz,k3=perm(c),k4=perm(c+1.0);
-  vec4 o1=fract(k3/41.0),o2=fract(k4/41.0),o3=o2*d.z+o1*(1.0-d.z);
-  vec2 o4=o3.yw*d.x+o3.xz*(1.0-d.x);
-  return o4.y*d.y+o4.x*(1.0-d.y);
+/* ═══ 3D BAR CHART — the data centrepiece ═══ */
+const BAR_W=1.2,BAR_MH=10;
+const chX=[-5,0,5];
+const bars=[];
+const barG=new THREE.Group();barG.position.y=-6;
+
+for(let c=0;c<3;c++){
+  for(let b=0;b<2;b++){
+    const isH=b===0;
+    const color=isH?0xff1a5e:0x00d4ff;
+    const mat=new THREE.MeshStandardMaterial({
+      color,emissive:color,emissiveIntensity:0.35,
+      metalness:0.85,roughness:0.15,
+    });
+    const mesh=new THREE.Mesh(new THREE.BoxGeometry(BAR_W,1,BAR_W),mat);
+    mesh.position.x=chX[c]+(isH?-0.8:0.8);
+    mesh.scale.y=0.01;
+    barG.add(mesh);
+    bars.push({mesh,mat,target:0,cur:0.01});
+  }
 }
-float fbm5(vec3 p){float v=0.0,a=0.5;for(int i=0;i<5;i++){v+=a*n3(p);p=p*2.1+vec3(1.7,9.2,4.1);a*=0.5;}return v;}
-float fbm3(vec3 p){float v=0.0,a=0.5;for(int i=0;i<3;i++){v+=a*n3(p);p=p*2.1+vec3(1.7,9.2,4.1);a*=0.5;}return v;}
+Sc.add(barG);
 
-void main(){
-  vec3 pos=position*uScale;
-
-  // Domain warping — feeds noise back as position offset for organic flow
-  vec3 q=vec3(
-    fbm3(pos*1.2+vec3(0.0,0.0,uTime*0.1)),
-    fbm3(pos*1.2+vec3(5.2,1.3,uTime*0.12)),
-    fbm3(pos*1.2+vec3(3.7,8.1,uTime*0.08))
-  );
-  vec3 warped=pos+q*0.8;
-
-  float n=fbm5(warped*1.3+uTime*0.15)*2.0-1.0;
-  float n2=fbm5(warped*2.5+uTime*0.3+99.0)*2.0-1.0;
-  vNoise=n;vSide=pos.x;
-
-  float disp=n*2.0+n2*0.8;
-
-  // Morph: rip into hemispheres
-  float side=sign(pos.x+0.001);
-  float morphPush=side*uMorph*5.0;
-  disp+=uMorph*n2*2.0*side;
-
-  // Fire: violent eruption with directional tendrils
-  float fireBase=n2*5.0+sin(uTime*7.0+pos.y*4.0)*3.0;
-  float tendril=max(0.0,sin(uTime*5.0+pos.x*6.0))*4.0*smoothstep(-1.0,3.0,pos.y);
-  float fireDisp=uFire*(fireBase+tendril);
-
-  // Explode
-  float explodeDisp=uExplode*(n*10.0+2.0);
-
-  // Pulse
-  float pulse=uPulse*sin(uTime*10.0)*0.6;
-
-  // Converge
-  float conv=uConverge*(-length(pos)*0.4);
-
-  // Data: quantise to geometric facets
-  float dataQ=uDataVis*(floor(n*6.0)/6.0-n)*1.5;
-
-  vec3 displaced=pos+normal*(disp+fireDisp+explodeDisp+pulse+conv+dataQ);
-  displaced.x+=morphPush;
-
-  vDisp=length(displaced-pos);
-  vW=(modelMatrix*vec4(displaced,1.0)).xyz;
-  vN=normalize(normalMatrix*(normal+vec3(n*0.3,n2*0.3,n*0.2)));
-  vec3 viewDir=normalize(cameraPosition-vW);
-  vFr=pow(1.0-max(dot(viewDir,vN),0.0),2.2);
-
-  gl_Position=projectionMatrix*modelViewMatrix*vec4(displaced,1.0);
-}`;
-
-/* ═══ ORGANISM — FRAGMENT SHADER ═══ */
-const ORG_F=`
-uniform float uTime,uMorph,uFire,uConverge,uEmissive,uDataVis,uColorTemp;
-uniform vec3 uHCol,uACol,uFCol;
-varying vec3 vN,vW;varying float vFr,vNoise,vSide,vDisp;
-
-void main(){
-  float side=smoothstep(-3.0,3.0,vSide);
-  vec3 base=mix(uHCol,uACol,side);
-
-  // Fire: incandescent heat gradient (dark red → orange → yellow → white)
-  if(uFire>0.01){
-    float heat=vDisp*0.12*uFire;
-    vec3 fc=mix(vec3(0.5,0.0,0.0),vec3(1.0,0.4,0.0),clamp(heat,0.0,1.0));
-    fc=mix(fc,vec3(1.0,0.9,0.5),clamp(heat-1.0,0.0,1.0));
-    base=mix(base,fc,uFire*(0.5+vFr*0.5));
-  }
-
-  // Data: animated circuit traces
-  if(uDataVis>0.01){
-    float grid=step(0.46,fract(vW.x*2.5))+step(0.46,fract(vW.y*2.5));
-    float pulse=smoothstep(0.85,1.0,fract(vW.y*6.0-uTime*3.0));
-    float pulse2=smoothstep(0.85,1.0,fract(vW.x*4.0+uTime*2.0));
-    vec3 dc=vec3(0.0,0.85,1.0);
-    base=mix(base,dc,uDataVis*grid*0.4);
-    base+=dc*(pulse+pulse2)*uDataVis*0.3;
-  }
-
-  // Lighting
-  vec3 L=normalize(vec3(0.5,1.0,0.8));
-  float diff=max(dot(vN,L),0.0)*0.5+0.5;
-  float spec=pow(max(dot(reflect(-L,vN),normalize(cameraPosition-vW)),0.0),48.0);
-  float sss=pow(max(dot(-vN,L),0.0),1.5)*0.5;
-
-  // Rim — strong, mode-reactive
-  vec3 rimCol=mix(uHCol,uACol,side)*2.5;
-  rimCol=mix(rimCol,uFCol*4.0,uFire);
-  rimCol=mix(rimCol,vec3(0.0,1.0,1.2),uDataVis*0.5);
-
-  vec3 col=base*diff+rimCol*vFr+base*sss+vec3(1.0)*spec*0.35;
-
-  // Emissive core glow
-  float emP=sin(uTime*5.0+vW.y*8.0)*0.5+0.5;
-  col+=base*uEmissive*emP*0.7;
-
-  // Fire incandescence on edges
-  col+=uFCol*uFire*vFr*4.0;
-  col+=vec3(1.0,0.6,0.1)*uFire*pow(vFr,1.5)*3.0;
-
-  // Colour temperature shift across narrative
-  float warm=clamp(-uColorTemp,0.0,1.0);
-  float cool=clamp(uColorTemp,0.0,1.0);
-  col*=mix(vec3(1.0),vec3(1.15,1.0,0.85),warm);
-  col*=mix(vec3(1.0),vec3(0.85,0.95,1.15),cool);
-
-  gl_FragColor=vec4(col,1.0);
-}`;
-
-const orgU={
-  uTime:{value:0},uMorph:{value:0},uFire:{value:0},
-  uConverge:{value:0},uExplode:{value:0},uPulse:{value:0},
-  uEmissive:{value:0},uScale:{value:1},uDataVis:{value:0},
-  uColorTemp:{value:0},
-  uHCol:{value:new THREE.Color(0xff1a5e)},
-  uACol:{value:new THREE.Color(0x00d4ff)},
-  uFCol:{value:new THREE.Color(0xff3300)},
+function setBarTargets(t){t.forEach((v,i)=>{bars[i].target=v;});}
+const barSets={
+  zero:[0,0,0,0,0,0],
+  channels:[0.50,0.45,0.60,0.55,0.45,0.50],
+  equal:[0.50,0.50,0.50,0.50,0.50,0.50],
+  battle:[0.70,0.60,0.75,0.65,0.55,0.60],
+  data:[0.80,0.70,0.85,0.72,0.62,0.75],
 };
 
-const org=new THREE.Mesh(
-  new THREE.IcosahedronGeometry(5,GEO_DETAIL),
-  new THREE.ShaderMaterial({uniforms:orgU,vertexShader:ORG_V,fragmentShader:ORG_F,side:THREE.DoubleSide})
-);
-S.add(org);
+/* ═══ BENCHMARK LINE ═══ */
+const benchMat=new THREE.MeshBasicMaterial({color:0xffbb00,transparent:true,opacity:0,side:THREE.DoubleSide});
+const benchLine=new THREE.Mesh(new THREE.BoxGeometry(14,0.06,0.4),benchMat);
+benchLine.position.y=-6+BAR_MH*0.65;
+Sc.add(benchLine);
 
-/* ═══ PARTICLES ═══ */
+/* ═══ PARTICLES — data cloud that morphs between states ═══ */
 const eG=new THREE.BufferGeometry();
 const eP=new Float32Array(P_COUNT*3),ePh=new Float32Array(P_COUNT),eSz=new Float32Array(P_COUNT),eSd=new Float32Array(P_COUNT);
 for(let i=0;i<P_COUNT;i++){
   const th=Math.random()*Math.PI*2,ph=Math.acos(Math.random()*2-1);
-  const r=5+Math.random()*12;
+  const r=3+Math.random()*5;
   eP[i*3]=r*Math.sin(ph)*Math.cos(th);eP[i*3+1]=r*Math.sin(ph)*Math.sin(th);eP[i*3+2]=r*Math.cos(ph);
-  ePh[i]=Math.random()*6.28;eSz[i]=0.5+Math.random()*2.2;
+  ePh[i]=Math.random()*6.28;eSz[i]=0.5+Math.random()*2.0;
   eSd[i]=i<P_COUNT/3?-1:(i<P_COUNT*2/3?1:0);
 }
 eG.setAttribute('position',new THREE.BufferAttribute(eP,3));
@@ -332,163 +193,134 @@ eG.setAttribute('aSd',new THREE.BufferAttribute(eSd,1));
 const eM=new THREE.ShaderMaterial({
   uniforms:{
     uTime:{value:0},uInt:{value:0.5},uMorph:{value:0},uFire:{value:0},
-    uConv:{value:0},uData:{value:0},uOrbit:{value:0.5},
+    uConv:{value:0},uRain:{value:0},uOrbit:{value:0.5},
   },
   vertexShader:`
     attribute float aP,aS,aSd;
-    uniform float uTime,uInt,uMorph,uFire,uConv,uData,uOrbit;
+    uniform float uTime,uInt,uMorph,uFire,uConv,uRain,uOrbit;
     varying vec3 vC;varying float vA;
     void main(){
       vec3 p=position;
-      float angle=uTime*uOrbit*0.3+aP;
-      float r=length(p.xz);
+      float angle=uTime*uOrbit*0.3+aP;float r=length(p.xz);
       p.x=cos(angle)*r;p.z=sin(angle)*r;
-      p+=normalize(p)*sin(uTime*0.5+aP)*1.5;
+      p+=normalize(p)*sin(uTime*0.5+aP)*1.2;
       p.x+=aSd*uMorph*8.0;
       if(uFire>0.01){
         p.y+=sin(uTime*6.0+aP*4.0)*uFire*8.0;
         p.x+=cos(uTime*5.0+aP*3.0)*uFire*4.0;
         p.z+=sin(uTime*4.0+aP*2.0)*uFire*3.0;
       }
-      if(uData>0.01){
+      if(uRain>0.01){
         float col=floor(aP*5.0/6.28);
-        float colX=(col-2.0)*6.0+sin(aP*3.0)*1.5;
-        float fallSpd=8.0+aP*4.0;
-        float y=mod(p.y-uTime*fallSpd+aP*20.0,40.0)-20.0;
-        p.x=mix(p.x,colX,uData);
-        p.y=mix(p.y,y,uData);
-        p.z=mix(p.z,sin(aP)*3.0,uData);
+        float colX=(col-2.0)*5.0+sin(aP*3.0)*0.8;
+        float fs=6.0+aP*4.0;
+        float y=mod(p.y-uTime*fs+aP*20.0,30.0)-15.0;
+        p.x=mix(p.x,colX,uRain);p.y=mix(p.y,y,uRain);
+        p.z=mix(p.z,sin(aP)*2.0,uRain);
       }
       p=mix(p,vec3(0),uConv*0.7);
       vec4 mv=modelViewMatrix*vec4(p,1.0);
-      gl_PointSize=aS*uInt*(250.0/-mv.z);
+      gl_PointSize=aS*uInt*(200.0/-mv.z);
       gl_Position=projectionMatrix*mv;
       vec3 hC=vec3(1.0,0.1,0.37),aC=vec3(0.0,0.83,1.0),fC=vec3(1.0,0.2,0.0);
       vC=aSd<-0.5?hC:(aSd>0.5?aC:mix(hC,aC,0.5));
       vC=mix(vC,fC,uFire*0.8);
+      vC=mix(vC,aC,uRain*0.5);
       vA=uInt*(0.4+sin(uTime*0.6+aP)*0.3)*smoothstep(30.0,3.0,length(p));
-    }
-  `,
+    }`,
   fragmentShader:`
     varying vec3 vC;varying float vA;
-    void main(){
-      float d=length(gl_PointCoord-0.5);if(d>0.5)discard;
-      gl_FragColor=vec4(vC,smoothstep(0.5,0.0,d)*vA*0.9);
-    }
-  `,
+    void main(){float d=length(gl_PointCoord-0.5);if(d>0.5)discard;
+    gl_FragColor=vec4(vC,smoothstep(0.5,0.0,d)*vA*0.9);}`,
   transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
 });
-S.add(new THREE.Points(eG,eM));
+Sc.add(new THREE.Points(eG,eM));
 
 /* ═══ LOCK ═══ */
 const lockG=new THREE.Group();
 const lkM=new THREE.MeshStandardMaterial({color:0xff2200,emissive:0xff1100,emissiveIntensity:0.8,metalness:0.95,roughness:0.1});
 const lockBody=new THREE.Mesh(new THREE.BoxGeometry(4,5,1.5,4,4,2),lkM);
 lockG.add(lockBody);
-const khM=new THREE.MeshStandardMaterial({color:0x020204,emissive:0x000000,metalness:0,roughness:1});
+const khM=new THREE.MeshStandardMaterial({color:0x020204,metalness:0,roughness:1});
 const kh=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,1.6,16),khM);
 kh.rotation.x=Math.PI/2;kh.position.set(0,-0.2,0);lockBody.add(kh);
 const ks=new THREE.Mesh(new THREE.BoxGeometry(0.3,1.5,1.6),khM);
 ks.position.set(0,-1.2,0);lockBody.add(ks);
-const shM=new THREE.MeshStandardMaterial({color:0xcc3300,emissive:0x991100,emissiveIntensity:0.5,metalness:0.95,roughness:0.08});
-const shackle=new THREE.Mesh(new THREE.TorusGeometry(1.8,0.4,12,24,Math.PI),shM);
-shackle.position.set(0,2.5,0);
-lockG.add(shackle);
+const shackle=new THREE.Mesh(new THREE.TorusGeometry(1.8,0.4,12,24,Math.PI),
+  new THREE.MeshStandardMaterial({color:0xcc3300,emissive:0x991100,emissiveIntensity:0.5,metalness:0.95,roughness:0.08}));
+shackle.position.set(0,2.5,0);lockG.add(shackle);
 lockG.position.z=5;lockG.visible=false;
-S.add(lockG);
+Sc.add(lockG);
 
 /* ═══ LIGHTING ═══ */
-S.add(new THREE.AmbientLight(0x080818,0.35));
-const dL=new THREE.DirectionalLight(0xffffff,0.5);dL.position.set(5,10,8);S.add(dL);
-const hL=new THREE.PointLight(0xff1a5e,0,60);hL.position.set(-15,0,8);S.add(hL);
-const aL=new THREE.PointLight(0x00d4ff,0,60);aL.position.set(15,0,8);S.add(aL);
-const fL=new THREE.PointLight(0xff3300,0,50);fL.position.set(0,-3,12);S.add(fL);
+Sc.add(new THREE.AmbientLight(0x080818,0.35));
+const dL=new THREE.DirectionalLight(0xffffff,0.5);dL.position.set(5,10,8);Sc.add(dL);
+const hL=new THREE.PointLight(0xff1a5e,0,60);hL.position.set(-15,3,8);Sc.add(hL);
+const aL=new THREE.PointLight(0x00d4ff,0,60);aL.position.set(15,3,8);Sc.add(aL);
+const fL=new THREE.PointLight(0xff3300,0,50);fL.position.set(0,-3,12);Sc.add(fL);
 
-/* ═══ POST-PROCESSING ═══
-   Combined cinematic pass: chromatic aberration + vignette + film grain
-   Single draw call instead of three separate passes — critical for mobile GPU budget.
-*/
+/* ═══ POST-PROCESSING ═══ */
 const comp=new EffectComposer(R);
-comp.addPass(new RenderPass(S,cam));
-const bloom=new UnrealBloomPass(new THREE.Vector2(fw,fh),1.5,0.4,0.7);
+comp.addPass(new RenderPass(Sc,cam));
+const bloom=new UnrealBloomPass(new THREE.Vector2(fw,fh),1.5,0.4,0.75);
 comp.addPass(bloom);
-
-const cinematicShader={
-  uniforms:{
-    tDiffuse:{value:null},
-    uChroma:{value:0.003},
-    uTime:{value:0},
-    uGrain:{value:0.06},
-    uVigD:{value:0.5},
-    uVigTint:{value:new THREE.Color(0x030008)},
-  },
+const cinPass=new ShaderPass({
+  uniforms:{tDiffuse:{value:null},uCh:{value:0.003},uT:{value:0},uGr:{value:0.05},uVD:{value:0.5},uVT:{value:new THREE.Color(0x030008)}},
   vertexShader:`varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
   fragmentShader:`
-    uniform sampler2D tDiffuse;uniform float uChroma,uTime,uGrain,uVigD;uniform vec3 uVigTint;
-    varying vec2 v;
-    float hash12(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
+    uniform sampler2D tDiffuse;uniform float uCh,uT,uGr,uVD;uniform vec3 uVT;varying vec2 v;
+    float h12(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
     void main(){
-      vec2 d=v-0.5;float l=dot(d,d);
-      float o=uChroma*l;
-      float r=texture2D(tDiffuse,v+d*o).r;
-      float g=texture2D(tDiffuse,v).g;
-      float b=texture2D(tDiffuse,v-d*o).b;
-      vec3 col=vec3(r,g,b);
-      float vig=1.0-l*0.4;
-      col=mix(uVigTint,col,clamp(pow(max(vig,0.0),uVigD),0.0,1.0));
-      float grain=(hash12(v*vec2(uTime*97.0,uTime*53.0))-0.5)*uGrain;
-      col+=grain;
-      gl_FragColor=vec4(col,1.0);
-    }
-  `,
-};
-const cinPass=new ShaderPass(cinematicShader);
+      vec2 d=v-0.5;float l=dot(d,d);float o=uCh*l;
+      float r=texture2D(tDiffuse,v+d*o).r;float g=texture2D(tDiffuse,v).g;float b=texture2D(tDiffuse,v-d*o).b;
+      vec3 c=vec3(r,g,b);
+      float vig=1.0-l*0.4;c=mix(uVT,c,clamp(pow(max(vig,0.0),uVD),0.0,1.0));
+      c+=(h12(v*vec2(uT*97.0,uT*53.0))-0.5)*uGr;
+      gl_FragColor=vec4(c,1.0);
+    }`,
+});
 comp.addPass(cinPass);
 comp.addPass(new OutputPass());
 
-/* ═══ VOICE — swappable module ═══ */
+/* ═══ VOICE ═══ */
 let vc=null;
-function loadV(){const vs=speechSynthesis.getVoices();vc=vs.find(v=>/Daniel|Google UK Male|Alex|Aaron/i.test(v.name)&&/en/i.test(v.lang))||vs.find(v=>/en-(GB|US)/i.test(v.lang)&&!/female/i.test(v.name))||vs.find(v=>/en/i.test(v.lang))||vs[0];}
+function loadV(){const vs=speechSynthesis.getVoices();vc=vs.find(x=>/Daniel|Google UK Male|Alex|Aaron/i.test(x.name)&&/en/i.test(x.lang))||vs.find(x=>/en-(GB|US)/i.test(x.lang)&&!/female/i.test(x.name))||vs.find(x=>/en/i.test(x.lang))||vs[0];}
 speechSynthesis.onvoiceschanged=loadV;loadV();
-function say(txt,rate=0.9,pitch=0.8){
-  speechSynthesis.cancel(); // Prevent audio pileup
-  if(!vc)return;
-  const u=new SpeechSynthesisUtterance(txt);u.voice=vc;u.rate=rate;u.pitch=pitch;u.volume=1;speechSynthesis.speak(u);
-}
+function say(txt,rate=0.9,pitch=0.8){speechSynthesis.cancel();if(!vc)return;const u=new SpeechSynthesisUtterance(txt);u.voice=vc;u.rate=rate;u.pitch=pitch;u.volume=1;speechSynthesis.speak(u);}
 
 /* ═══ SCRIPT ═══ */
 const Q=[
-{t:0,  d:3.5,say:"Welcome to Day SIX of our journey.",   html:'Welcome to Day <span class="b f">SIX</span>',                     sub:'of our journey.',   m:'intro',   r:.82,p:.7},
-{t:3.8,d:2.8,say:"ONE brand, crafted by human hands.",   html:'<span class="b h">ONE</span> brand',                              sub:'crafted by human hands.',m:'human',r:.92,p:.85},
-{t:7,  d:2.5,say:"ONE, generated by A.I.",                html:'<span class="b a">ONE</span> generated by A.I.',                  sub:'',                  m:'ai',      r:.92,p:.85},
-{t:10, d:2.8,say:"Same constraints. Same timeline.",      html:'Same constraints. Same timeline.',                                 sub:'',                  m:'split',   r:1.0,p:.95},
-{t:13.2,d:3.5,say:"We are watching, who survives the fire.",html:'Who survives the <span class="b f">fire</span>.',               sub:'',                  m:'fire',    r:.78,p:.65},
-{t:17, d:2.2,say:"To win, you need to PERFORM.",          html:'<span class="b g">PERFORM</span>.',                               sub:'',                  m:'perform', r:1.12,p:.95},
-{t:19.5,d:3.8,say:"Three channels. Google. Meta. Email.", html:'<span class="a">Google.</span> <span class="a">Meta.</span> <span class="a">Email.</span>',sub:'',      m:'channels',r:1.1,p:.95},
-{t:23.8,d:3,  say:"Same creative volume. Same spend. Same conditions.",html:'Same volume. Same spend.<br/>Same conditions.',       sub:'',                  m:'equal',   r:1.02,p:.95},
+{t:0,  d:3.5,say:"Welcome to Day SIX of our journey.",   html:'Welcome to Day <span class="b f">SIX</span>',sub:'of our journey.',m:'intro',r:.82,p:.7},
+{t:3.8,d:2.8,say:"ONE brand, crafted by human hands.",   html:'<span class="b h">ONE</span> brand',sub:'crafted by human hands.',m:'human',r:.92,p:.85},
+{t:7,  d:2.5,say:"ONE, generated by A.I.",                html:'<span class="b a">ONE</span> generated by A.I.',sub:'',m:'ai',r:.92,p:.85},
+{t:10, d:2.8,say:"Same constraints. Same timeline.",      html:'Same constraints. Same timeline.',sub:'',m:'split',r:1.0,p:.95},
+{t:13.2,d:3.5,say:"We are watching, who survives the fire.",html:'Who survives the <span class="b f">fire</span>.',sub:'',m:'fire',r:.78,p:.65},
+{t:17, d:2.2,say:"To win, you need to PERFORM.",          html:'<span class="b g">PERFORM</span>.',sub:'',m:'perform',r:1.12,p:.95},
+{t:19.5,d:3.8,say:"Three channels. Google. Meta. Email.", html:'<span class="a">Google.</span> <span class="a">Meta.</span> <span class="a">Email.</span>',sub:'',m:'channels',r:1.1,p:.95},
+{t:23.8,d:3,  say:"Same creative volume. Same spend. Same conditions.",html:'Same volume. Same spend.<br/>Same conditions.',sub:'',m:'equal',r:1.02,p:.95},
 {t:27.2,d:3.2,say:"Both brands go head-to-head, across ALL THREE.",html:'<span class="f">Head-to-head</span> across <span class="b">ALL THREE</span>.',sub:'',m:'battle',r:.85,p:.75},
-{t:30.8,d:2.5,say:"Category ONE is performance.",         html:'Category <span class="b g">ONE</span>',                           sub:'performance.',      m:'cat1',    r:.92,p:.85},
-{t:33.8,d:3,  say:"HARD DATA. Clicks, conversions, results.",html:'<span class="b mono">HARD DATA.</span>',                       sub:'Clicks. Conversions. Results.',m:'data',r:.92,p:.85},
-{t:37.2,d:2.8,say:"The stuff that ACTUALLY pays the bills.",html:'<span class="g">ACTUALLY</span> pays the bills.',               sub:'',                  m:'data2',   r:.88,p:.82},
-{t:40.3,d:2,  say:"No opinions. Just numbers.",            html:'<span class="b a mono">Just numbers.</span>',                     sub:'',                  m:'numbers', r:1.05,p:.95},
-{t:42.8,d:2,  say:"Category TWO?",                        html:'<span class="i">Category TWO?</span>',                            sub:'',                  m:'mystery', r:.7,p:.5},
-{t:45.2,d:3.2,say:"We're keeping THAT one, locked, for now.",html:'<span class="f">Locked</span>... for now.',                    sub:'',                  m:'locked',  r:.92,p:.85},
-{t:48.8,d:3,  say:"It will reveal itself, when the time is right.",html:'When the time is right.',                                sub:'',                  m:'reveal',  r:.78,p:.65},
-{t:52.2,d:2.8,say:"WE handle the operational data gathering.",html:'<span class="b">WE</span> handle the data.',                  sub:'',                  m:'ops',     r:.92,p:.85},
-{t:55.5,d:2.5,say:"But YOU, set the benchmark.",           html:'<span class="b g">YOU</span> set the benchmark.',                 sub:'',                  m:'you',     r:.9,p:.85},
-{t:58.5,d:3.2,say:"What METRICS prove a brand is actually working?",html:'What <span class="a">METRICS</span> prove it?',         sub:'',                  m:'question',r:.88,p:.82},
-{t:62,  d:2.2,say:"Comment your thoughts below.",          html:'Your thoughts.',                                                  sub:'',                  m:'cta',     r:.92,p:.85},
-{t:64.5,d:3.5,say:"See you again, soon.",                  html:'See you <span class="a">soon</span>.',                            sub:'',                  m:'outro',   r:.85,p:.8},
+{t:30.8,d:2.5,say:"Category ONE is performance.",         html:'Category <span class="b g">ONE</span>',sub:'performance.',m:'cat1',r:.92,p:.85},
+{t:33.8,d:3,  say:"HARD DATA. Clicks, conversions, results.",html:'<span class="b mono">HARD DATA.</span>',sub:'Clicks. Conversions. Results.',m:'data',r:.92,p:.85},
+{t:37.2,d:2.8,say:"The stuff that ACTUALLY pays the bills.",html:'<span class="g">ACTUALLY</span> pays the bills.',sub:'',m:'data2',r:.88,p:.82},
+{t:40.3,d:2,  say:"No opinions. Just numbers.",            html:'<span class="b a mono">Just numbers.</span>',sub:'',m:'numbers',r:1.05,p:.95},
+{t:42.8,d:2,  say:"Category TWO?",                        html:'<span class="i">Category TWO?</span>',sub:'',m:'mystery',r:.7,p:.5},
+{t:45.2,d:3.2,say:"We're keeping THAT one, locked, for now.",html:'<span class="f">Locked</span>... for now.',sub:'',m:'locked',r:.92,p:.85},
+{t:48.8,d:3,  say:"It will reveal itself, when the time is right.",html:'When the time is right.',sub:'',m:'reveal',r:.78,p:.65},
+{t:52.2,d:2.8,say:"WE handle the operational data gathering.",html:'<span class="b">WE</span> handle the data.',sub:'',m:'ops',r:.92,p:.85},
+{t:55.5,d:2.5,say:"But YOU, set the benchmark.",           html:'<span class="b g">YOU</span> set the benchmark.',sub:'',m:'you',r:.9,p:.85},
+{t:58.5,d:3.2,say:"What METRICS prove a brand is actually working?",html:'What <span class="a">METRICS</span> prove it?',sub:'',m:'question',r:.88,p:.82},
+{t:62,  d:2.2,say:"Comment your thoughts below.",          html:'Your thoughts.',sub:'',m:'cta',r:.92,p:.85},
+{t:64.5,d:3.5,say:"See you again, soon.",                  html:'See you <span class="a">soon</span>.',sub:'',m:'outro',r:.85,p:.8},
 ];
 const TOTAL=69;
 
-/* ═══ VISUAL STATE ═══ */
+/* ═══ STATE ═══ */
 const v={
-  morph:0,fire:0,conv:0,explode:0,pulse:0,emissive:0,scale:1,dataVis:0,colorTemp:0,
-  eInt:.5,eMorph:0,eFire:0,eConv:0,eData:0,eOrbit:.5,
-  bloom:1.5,chroma:.003,grain:.06,
-  camX:0,camY:0,camZ:18,camShake:0,
+  pInt:.5,pMorph:0,pFire:0,pConv:0,pRain:0,pOrbit:.5,
+  gridOp:0,benchOp:0,
+  camX:0,camY:0,camZ:16,camLookY:0,camShake:0,
   hL:0,aL:0,fL:0,
+  bloom:1.5,chroma:.003,grain:.05,
   lockVis:false,
   bgCol:new THREE.Color(0x020204),
 };
@@ -496,115 +328,117 @@ const v={
 const tE=document.getElementById('t'),sE=document.getElementById('sub');
 const vsE=document.getElementById('vs'),hudE=document.getElementById('hud');
 const ctaE=document.getElementById('cta'),pF=document.getElementById('prog-f');
-const replayE=document.getElementById('replay');
+const metE=document.getElementById('met'),replayE=document.getElementById('replay');
 
 function setBars(a,b,c,d,e,f){
   document.getElementById('gh').style.width=a+'%';document.getElementById('ga').style.width=b+'%';
   document.getElementById('mh').style.width=c+'%';document.getElementById('ma').style.width=d+'%';
   document.getElementById('eh').style.width=e+'%';document.getElementById('ea').style.width=f+'%';
 }
-
 function haptic(ms){try{navigator.vibrate&&navigator.vibrate(ms);}catch(e){}}
+function punch(){tE.classList.remove('punch');void tE.offsetWidth;tE.classList.add('punch');}
 
 function rst(){
-  Object.assign(v,{morph:0,fire:0,conv:0,explode:0,pulse:0,emissive:0,scale:1,dataVis:0,colorTemp:0,
-    eMorph:0,eFire:0,eConv:0,eData:0,eOrbit:.5,
-    bloom:1.5,chroma:.003,grain:.06,camShake:0,hL:0,aL:0,fL:0,lockVis:false});
+  Object.assign(v,{pInt:.5,pMorph:0,pFire:0,pConv:0,pRain:0,pOrbit:.5,
+    gridOp:0,benchOp:0,camX:0,camY:0,camZ:16,camLookY:0,camShake:0,
+    hL:0,aL:0,fL:0,bloom:1.5,chroma:.003,grain:.05,lockVis:false});
+  setBarTargets(barSets.zero);
   v.bgCol.set(0x020204);
-  hudE.classList.remove('on');ctaE.classList.remove('on');
+  hudE.classList.remove('on');ctaE.classList.remove('on');metE.classList.remove('on');
   vsE.style.opacity='0';lockG.visible=false;
 }
 
-/* ═══ MODE HANDLERS ═══ */
+/* ═══ MODE HANDLERS — each one sets a complete visual world ═══ */
 const M={
-  intro(){v.emissive=.8;v.bloom=2.0;v.pulse=.6;v.camShake=.02;v.eInt=.7;v.camZ=15;v.colorTemp=-.3;},
-  human(){
-    v.morph=.5;v.eMorph=.4;v.hL=5;v.camX=-2;v.camZ=13;
-    v.emissive=.4;v.scale=1.1;v.colorTemp=-.2;
-  },
-  ai(){
-    v.morph=.5;v.eMorph=.4;v.aL=5;v.camX=2;v.camZ=13;
-    v.emissive=.4;v.scale=1.1;v.colorTemp=.2;
-  },
-  split(){
-    v.morph=1;v.eMorph=1;v.hL=3;v.aL=3;v.camX=0;v.camZ=20;
-    v.scale=1.2;v.bloom=1.8;haptic(30);
-  },
+  intro(){v.pInt=.7;v.bloom=2;v.camZ=16;v.camY=0;v.camLookY=0;},
+  human(){v.pMorph=.5;v.hL=5;v.camX=-2;v.camZ=14;v.pInt=.8;},
+  ai(){v.pMorph=.5;v.aL=5;v.camX=2;v.camZ=14;v.pInt=.8;},
+  split(){v.pMorph=1;v.hL=3;v.aL=3;v.camZ=20;v.pInt=.9;haptic(30);},
   fire(){
-    v.fire=1;v.eFire=1;v.fL=8;v.bloom=2.8;v.chroma=.015;
-    v.camShake=.08;v.scale=1.3;v.emissive=.6;v.eInt=1;
-    v.bgCol.set(0x0a0200);v.colorTemp=-.5;v.grain=.1;
-    haptic(80);
-    tE.classList.remove('punch');void tE.offsetWidth;tE.classList.add('punch');
+    v.pFire=1;v.fL=8;v.bloom=2.8;v.chroma=.015;v.camShake=.08;v.pInt=1.2;
+    v.bgCol.set(0x0a0200);v.grain=.1;haptic(80);punch();
   },
   perform(){
-    vsE.style.opacity='1';
-    v.explode=.5;v.camShake=.05;v.bloom=2.5;v.pulse=1;v.eInt=1;
-    v.colorTemp=-.3;v.chroma=.01;
+    vsE.style.opacity='1';v.pConv=.5;v.bloom=2.5;v.camShake=.05;v.pInt=1.2;
     haptic(120);
     setTimeout(()=>{vsE.style.opacity='0';},1500);
-    setTimeout(()=>{v.explode=0;},800);
+    setTimeout(()=>{v.pConv=0;},800);
   },
   channels(){
-    v.dataVis=.6;v.eData=.6;hudE.classList.add('on');
-    setBars(42,38,55,48,40,45);v.aL=2;v.hL=2;v.camZ=18;v.bloom=1.2;v.colorTemp=.2;
+    setBarTargets(barSets.channels);v.gridOp=.8;
+    v.pRain=.6;v.pInt=.3;
+    v.camX=0;v.camY=5;v.camZ=22;v.camLookY=-3;
+    v.hL=2;v.aL=2;v.bloom=1.2;
+    hudE.classList.add('on');setBars(42,38,55,48,40,45);
   },
   equal(){
-    v.dataVis=.8;v.eData=.7;hudE.classList.add('on');
-    setBars(50,50,50,50,50,50);v.camZ=20;
+    setBarTargets(barSets.equal);v.gridOp=.8;
+    v.pRain=.7;v.pInt=.3;v.camY=5;v.camZ=22;v.camLookY=-3;
+    hudE.classList.add('on');setBars(50,50,50,50,50,50);
   },
   battle(){
-    v.morph=.7;v.fire=.4;v.eMorph=.6;v.eFire=.3;v.dataVis=.3;
-    v.hL=3;v.aL=3;v.fL=4;v.bloom=2;v.camShake=.03;v.scale=1.15;v.colorTemp=-.3;
-    hudE.classList.add('on');setBars(68,58,72,62,52,58);
-    haptic(50);
+    setBarTargets(barSets.battle);v.gridOp=1;
+    v.pRain=.4;v.pFire=.2;v.pInt=.5;
+    v.hL=3;v.aL=3;v.fL=2;v.bloom=2;v.camShake=.03;
+    v.camY=4;v.camZ=20;v.camLookY=-2;
+    hudE.classList.add('on');setBars(68,58,72,62,52,58);haptic(50);
   },
   cat1(){
-    v.dataVis=.5;v.eData=.4;v.emissive=.5;v.bloom=1.4;
-    hudE.classList.add('on');v.camZ=15;
+    setBarTargets(barSets.battle);v.gridOp=.7;
+    v.pRain=.5;v.pInt=.3;v.camY=4;v.camZ=18;v.camLookY=-2;v.bloom=1.4;
+    hudE.classList.add('on');
   },
   data(){
-    v.dataVis=1;v.eData=1;v.bloom=1.2;v.aL=3;
-    hudE.classList.add('on');setBars(75,65,80,68,58,70);v.camZ=16;
-    v.emissive=.3;v.colorTemp=.3;
+    setBarTargets(barSets.data);v.gridOp=1;
+    v.pRain=1;v.pInt=.4;v.aL=3;v.bloom=1.2;
+    v.camY=6;v.camZ=20;v.camLookY=-3;
+    hudE.classList.add('on');metE.classList.add('on');setBars(75,65,80,68,58,70);
   },
-  data2(){v.dataVis=.9;v.eData=.8;hudE.classList.add('on');v.emissive=.4;v.colorTemp=-.1;},
+  data2(){
+    setBarTargets(barSets.data);v.gridOp=.9;
+    v.pRain=.8;v.pInt=.4;
+    hudE.classList.add('on');metE.classList.add('on');
+  },
   numbers(){
-    v.dataVis=1;v.eData=1;v.bloom=.8;v.chroma=.005;
-    v.bgCol.set(0x040408);v.aL=2;v.camZ=18;v.colorTemp=.4;v.grain=.04;
+    setBarTargets(barSets.data);v.gridOp=.6;
+    v.pRain=1;v.pInt=.2;v.bloom=.8;v.chroma=.005;
+    v.bgCol.set(0x040408);v.camY=8;v.camZ=22;v.camLookY=-4;
   },
   mystery(){
-    v.scale=.4;v.eInt=.15;v.bloom=.5;v.emissive=.1;
-    v.camZ=24;v.bgCol.set(0x020204);v.colorTemp=.3;v.grain=.08;
+    setBarTargets(barSets.zero);v.gridOp=0;
+    v.pInt=.15;v.pRain=0;v.bloom=.5;
+    v.camZ=24;v.camY=0;v.camLookY=0;v.grain=.08;
+    metE.classList.remove('on');
   },
   locked(){
-    v.lockVis=true;v.fire=.15;v.fL=3;v.chroma=.008;
-    v.scale=.6;v.eInt=.3;v.eFire=.1;v.bloom=1.2;v.colorTemp=-.2;
-    haptic(40);
+    v.lockVis=true;v.pFire=.15;v.fL=3;v.pInt=.3;v.chroma=.008;v.bloom=1.2;
+    setBarTargets(barSets.zero);v.gridOp=0;haptic(40);
   },
   reveal(){
-    v.scale=.7;v.eInt=.3;v.bloom=.8;v.emissive=.2;
-    v.lockVis=false;v.camZ=20;
+    v.pInt=.3;v.bloom=.8;v.lockVis=false;v.camZ=20;v.camY=0;v.camLookY=0;
+    setBarTargets(barSets.zero);v.gridOp=0;
   },
   ops(){
-    v.dataVis=.5;v.eData=.4;v.eInt=.5;v.scale=.9;v.bloom=1;v.camZ=16;
+    setBarTargets(barSets.data);v.gridOp=.5;
+    v.pRain=.5;v.pInt=.4;v.camY=3;v.camZ=20;v.camLookY=-2;v.bloom=1;
   },
   you(){
-    v.conv=.5;v.eConv=.6;v.bloom=2.5;v.emissive=1;
-    v.eInt=1.2;v.scale=1.4;v.camZ=10;v.pulse=.8;
-    v.hL=2;v.aL=2;v.colorTemp=-.2;v.chroma=.008;
-    haptic(100);
-    tE.classList.remove('punch');void tE.offsetWidth;tE.classList.add('punch');
+    v.pConv=.6;v.pInt=1.2;v.bloom=2.5;v.camZ=12;v.camY=0;v.camLookY=0;
+    v.benchOp=1;setBarTargets(barSets.data);v.gridOp=.4;
+    haptic(100);punch();
   },
   question(){
-    v.scale=.8;v.emissive=.5;v.bloom=1.3;v.eInt=.4;v.camZ=16;v.colorTemp=.1;
+    v.pInt=.4;v.bloom=1.3;v.camZ=18;v.camY=2;v.camLookY=-1;
+    setBarTargets(barSets.data);v.gridOp=.3;
   },
   cta(){
-    ctaE.classList.add('on');v.scale=.7;v.eInt=.3;v.bloom=.9;v.camZ=20;
+    ctaE.classList.add('on');v.pInt=.3;v.bloom=.9;v.camZ=20;v.camY=0;v.camLookY=0;
+    setBarTargets(barSets.zero);v.gridOp=0;
   },
   outro(){
-    v.eInt=.2;v.bloom=.6;v.scale=.6;v.emissive=.1;v.colorTemp=-.2;
-    ctaE.classList.remove('on');hudE.classList.remove('on');v.camZ=22;
+    v.pInt=.2;v.bloom=.6;v.camZ=22;v.camY=0;v.camLookY=0;
+    setBarTargets(barSets.zero);v.gridOp=0;
+    ctaE.classList.remove('on');hudE.classList.remove('on');metE.classList.remove('on');
   },
 };
 
@@ -618,26 +452,23 @@ function fireCue(c){
   if(M[c.m])M[c.m]();
   setTimeout(()=>{tE.classList.remove('on');sE.classList.remove('on');},c.d*1000-400);
 }
-
-function startSequence(){
+function startSeq(){
   document.getElementById('go').classList.add('off');
   replayE.classList.remove('on');
-  t0=performance.now()/1000;run=true;cur=-1;
-  speechSynthesis.cancel();
+  t0=performance.now()/1000;run=true;cur=-1;speechSynthesis.cancel();
 }
-document.getElementById('go').addEventListener('click',startSequence);
-document.getElementById('replayBtn').addEventListener('click',startSequence);
+document.getElementById('go').addEventListener('click',startSeq);
+document.getElementById('replayBtn').addEventListener('click',startSeq);
 
 /* ═══ RENDER LOOP ═══ */
-let _pt=0,_et=0;
+let _pt=0,_et=0,_ly=0;
 const lp=(a,b,t)=>a+(b-a)*t;
 
 function anim(ts){
   requestAnimationFrame(anim);
   const dt=_pt?Math.min((ts-_pt)/1000,.05):0;
   _pt=ts;_et+=dt;
-  const t=_et;
-  const sp=.06;
+  const t=_et,sp=.06;
 
   if(run){
     const el=performance.now()/1000-t0;
@@ -645,55 +476,44 @@ function anim(ts){
     for(let i=0;i<Q.length;i++){
       if(el>=Q[i].t&&el<Q[i].t+Q[i].d&&i!==cur){cur=i;fireCue(Q[i]);}
     }
-    if(el>=TOTAL){
-      run=false;rst();tE.classList.remove('on');sE.classList.remove('on');
-      speechSynthesis.cancel();
-      replayE.classList.add('on');
-    }
+    if(el>=TOTAL){run=false;rst();tE.classList.remove('on');sE.classList.remove('on');speechSynthesis.cancel();replayE.classList.add('on');}
   }
 
-  // Organism
-  orgU.uTime.value=t;
-  orgU.uMorph.value=lp(orgU.uMorph.value,v.morph,sp);
-  orgU.uFire.value=lp(orgU.uFire.value,v.fire,sp);
-  orgU.uConverge.value=lp(orgU.uConverge.value,v.conv,sp);
-  orgU.uExplode.value=lp(orgU.uExplode.value,v.explode,sp);
-  orgU.uPulse.value=lp(orgU.uPulse.value,v.pulse,sp);
-  orgU.uEmissive.value=lp(orgU.uEmissive.value,v.emissive,sp);
-  orgU.uScale.value=lp(orgU.uScale.value,v.scale,sp);
-  orgU.uDataVis.value=lp(orgU.uDataVis.value,v.dataVis,sp);
-  orgU.uColorTemp.value=lp(orgU.uColorTemp.value,v.colorTemp,sp);
-
-  org.rotation.y+=dt*0.12;
-  org.rotation.x=Math.sin(t*0.08)*0.1;
-
-  // Embers
+  // Particles
   eM.uniforms.uTime.value=t;
-  eM.uniforms.uInt.value=lp(eM.uniforms.uInt.value,v.eInt,sp);
-  eM.uniforms.uMorph.value=lp(eM.uniforms.uMorph.value,v.eMorph,sp);
-  eM.uniforms.uFire.value=lp(eM.uniforms.uFire.value,v.eFire,sp);
-  eM.uniforms.uConv.value=lp(eM.uniforms.uConv.value,v.eConv,sp);
-  eM.uniforms.uData.value=lp(eM.uniforms.uData.value,v.eData,sp);
-  eM.uniforms.uOrbit.value=lp(eM.uniforms.uOrbit.value,v.eOrbit,sp);
+  eM.uniforms.uInt.value=lp(eM.uniforms.uInt.value,v.pInt,sp);
+  eM.uniforms.uMorph.value=lp(eM.uniforms.uMorph.value,v.pMorph,sp);
+  eM.uniforms.uFire.value=lp(eM.uniforms.uFire.value,v.pFire,sp);
+  eM.uniforms.uConv.value=lp(eM.uniforms.uConv.value,v.pConv,sp);
+  eM.uniforms.uRain.value=lp(eM.uniforms.uRain.value,v.pRain,sp);
+  eM.uniforms.uOrbit.value=lp(eM.uniforms.uOrbit.value,v.pOrbit,sp);
+
+  // Bars
+  bars.forEach(bar=>{
+    bar.cur=lp(bar.cur,bar.target,sp);
+    const h=Math.max(bar.cur*BAR_MH,0.01);
+    bar.mesh.scale.y=h;bar.mesh.position.y=h/2;
+    bar.mat.emissiveIntensity=lp(bar.mat.emissiveIntensity,bar.cur>0.03?0.35:0,sp);
+  });
+
+  // Platform
+  platMat.uniforms.uTime.value=t;
+  platMat.uniforms.uOp.value=lp(platMat.uniforms.uOp.value,v.gridOp,sp);
+
+  // Benchmark line
+  benchMat.opacity=lp(benchMat.opacity,v.benchOp,sp);
 
   // Lock
   lockG.visible=v.lockVis;
-  if(lockG.visible){
-    lockG.rotation.y+=dt*0.5;
-    lockG.position.y=Math.sin(t*1.5)*0.8;
-    lkM.emissiveIntensity=0.8+Math.sin(t*4)*0.4;
-  }
+  if(lockG.visible){lockG.rotation.y+=dt*0.5;lockG.position.y=Math.sin(t*1.5)*0.8;lkM.emissiveIntensity=0.8+Math.sin(t*4)*0.4;}
 
   // Camera
-  cam.position.x=lp(cam.position.x,v.camX+Math.sin(t*0.15)*1.2,sp);
-  cam.position.y=lp(cam.position.y,v.camY+Math.sin(t*0.18)*0.8,sp);
+  cam.position.x=lp(cam.position.x,v.camX+Math.sin(t*0.15)*1.0,sp);
+  cam.position.y=lp(cam.position.y,v.camY+Math.sin(t*0.18)*0.5,sp);
   cam.position.z=lp(cam.position.z,v.camZ,sp);
-  if(v.camShake>.001){
-    cam.position.x+=(Math.random()-.5)*v.camShake*3;
-    cam.position.y+=(Math.random()-.5)*v.camShake*3;
-    v.camShake*=0.96;
-  }
-  cam.lookAt(0,0,0);
+  if(v.camShake>.001){cam.position.x+=(Math.random()-.5)*v.camShake*3;cam.position.y+=(Math.random()-.5)*v.camShake*3;v.camShake*=.96;}
+  _ly=lp(_ly,v.camLookY,sp);
+  cam.lookAt(0,_ly,0);
 
   // Lights
   hL.intensity=lp(hL.intensity,v.hL,sp);
@@ -701,24 +521,20 @@ function anim(ts){
   fL.intensity=lp(fL.intensity,v.fL,sp);
 
   // Background
-  S.background.lerp(v.bgCol,sp);
+  Sc.background.lerp(v.bgCol,sp);
 
-  // Post-processing
+  // Post
   bloom.strength=lp(bloom.strength,v.bloom,sp);
-  cinPass.uniforms.uChroma.value=lp(cinPass.uniforms.uChroma.value,v.chroma,sp);
-  cinPass.uniforms.uGrain.value=lp(cinPass.uniforms.uGrain.value,v.grain,sp);
-  cinPass.uniforms.uTime.value=t;
+  cinPass.uniforms.uCh.value=lp(cinPass.uniforms.uCh.value,v.chroma,sp);
+  cinPass.uniforms.uGr.value=lp(cinPass.uniforms.uGr.value,v.grain,sp);
+  cinPass.uniforms.uT.value=t;
 
   comp.render();
 }
 
-/* Warm-up frame — forces shader compilation before user interacts */
 comp.render();
-console.log('[AvA] Warm-up frame rendered');
-
 requestAnimationFrame(anim);
 
-/* ═══ RESIZE ═══ */
 let rT;window.addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(()=>{
   const{w,h}=getFrameSize();
   frame.style.width=w+'px';frame.style.height=h+'px';
@@ -726,10 +542,10 @@ let rT;window.addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(()=>
   R.setSize(w,h);comp.setSize(w,h);
 },150);});
 
-console.log('[AvA] Fully initialised — r183, 9:16, domain-warped FBM');
+console.log('[AvA] Data viz build — r183, 9:16, 3D bar charts + particle cloud');
 }catch(err){
   console.error('[AvA] Init error:',err);
-  document.getElementById('go').innerHTML='<h1 style="color:red">Error</h1><p style="color:#fff;font-size:14px;margin-top:12px;max-width:80vw;word-break:break-all">'+err.message+'</p>';
+  document.getElementById('go').innerHTML='<h1 style="color:red">Error</h1><p style="color:#fff;font-size:13px;margin-top:10px;max-width:80vw;word-break:break-all">'+err.message+'</p>';
 }
 </script>
 </body>
