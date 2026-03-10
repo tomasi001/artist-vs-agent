@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Artist vs Agent — Day 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;800;900&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --font:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --bg:#050508;
+  --accent:#6ec6ff;
+  --fire:#ff4d2a;
+  --gold:#ffd700;
+  --human:#ff6b9d;
+  --ai:#6ec6ff;
+}
+html,body{
+  font-family:var(--font);background:var(--bg);color:#fff;
+  overflow:hidden;width:100%;height:100%;
+  -webkit-font-smoothing:antialiased;
+}
+#c{position:fixed;inset:0;z-index:1}
+
+/* Overlay text layers */
+#overlay{
+  position:fixed;inset:0;z-index:10;
+  pointer-events:none;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+}
+#title-text{
+  font-weight:200;font-size:clamp(2rem,6vw,5rem);
+  letter-spacing:-0.03em;line-height:1.05;
+  text-align:center;opacity:0;
+  transition:opacity 0.5s ease, transform 0.5s ease;
+  transform:translateY(20px);
+}
+#title-text.visible{opacity:1;transform:translateY(0)}
+#title-text .accent{color:var(--accent)}
+#title-text .fire{color:var(--fire)}
+#title-text .human{color:var(--human)}
+#title-text .ai{color:var(--ai)}
+#title-text .gold{color:var(--gold)}
+#title-text .whisper{font-style:italic;font-weight:300;opacity:0.7}
+#title-text .big{font-weight:900;font-size:1.3em}
+
+#subtitle-text{
+  font-weight:300;font-size:clamp(0.9rem,1.8vw,1.3rem);
+  color:rgba(255,255,255,0.5);
+  margin-top:16px;text-align:center;
+  opacity:0;transition:opacity 0.4s ease;
+  letter-spacing:0.02em;
+}
+#subtitle-text.visible{opacity:1}
+
+/* VS badge */
+#vs-badge{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-family:var(--mono);font-weight:700;
+  font-size:clamp(3rem,8vw,6rem);
+  color:var(--fire);opacity:0;z-index:15;
+  text-shadow:0 0 40px rgba(255,77,42,0.6);
+  pointer-events:none;
+  transition:opacity 0.3s ease;
+}
+
+/* Data HUD */
+#hud{
+  position:fixed;bottom:40px;left:50%;
+  transform:translateX(-50%);z-index:12;
+  pointer-events:none;opacity:0;
+  transition:opacity 0.4s ease;
+  display:flex;gap:24px;
+}
+#hud.visible{opacity:1}
+.hud-channel{
+  text-align:center;font-family:var(--mono);
+  font-size:12px;letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+.hud-channel .bar-wrap{
+  width:80px;height:4px;background:rgba(255,255,255,0.1);
+  border-radius:2px;margin:8px auto 4px;overflow:hidden;
+}
+.hud-channel .bar-fill{
+  height:100%;border-radius:2px;
+  transition:width 0.6s ease;width:0%;
+}
+.hud-channel .bar-fill.human{background:var(--human)}
+.hud-channel .bar-fill.ai{background:var(--ai)}
+.hud-label{color:rgba(255,255,255,0.35);font-size:10px;margin-top:2px}
+
+/* Start button */
+#start-btn{
+  position:fixed;inset:0;z-index:100;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;background:var(--bg);
+  cursor:pointer;
+  transition:opacity 0.5s ease;
+}
+#start-btn.hidden{opacity:0;pointer-events:none}
+#start-btn h1{
+  font-weight:200;font-size:clamp(2rem,5vw,4rem);
+  letter-spacing:-0.02em;margin-bottom:24px;
+}
+#start-btn p{
+  font-weight:300;font-size:14px;
+  color:rgba(255,255,255,0.4);
+  letter-spacing:0.1em;text-transform:uppercase;
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
+
+/* Metrics prompt */
+#metrics-prompt{
+  position:fixed;bottom:60px;left:50%;
+  transform:translateX(-50%);z-index:15;
+  pointer-events:auto;opacity:0;
+  transition:opacity 0.5s ease;
+  text-align:center;
+}
+#metrics-prompt.visible{opacity:1}
+#metrics-prompt p{
+  font-weight:300;font-size:clamp(0.85rem,1.4vw,1.1rem);
+  color:rgba(255,255,255,0.6);margin-bottom:12px;
+}
+#metrics-prompt .cta{
+  display:inline-block;padding:12px 32px;
+  border:1px solid var(--accent);border-radius:6px;
+  color:var(--accent);font-weight:400;font-size:14px;
+  letter-spacing:0.06em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.3s ease;
+  pointer-events:auto;
+}
+#metrics-prompt .cta:hover{background:var(--accent);color:var(--bg)}
+
+/* Progress bar */
+#progress{
+  position:fixed;bottom:0;left:0;
+  width:100%;height:3px;z-index:20;
+  background:rgba(255,255,255,0.05);
+}
+#progress-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--human),var(--ai));
+  transition:width 0.3s linear;
+}
+
+/* Glitch effect */
+.glitch{animation:glitch 0.15s ease both}
+@keyframes glitch{
+  0%{transform:translate(0);filter:hue-rotate(0)}
+  20%{transform:translate(-3px,2px);filter:hue-rotate(90deg)}
+  40%{transform:translate(3px,-2px);filter:hue-rotate(-90deg)}
+  60%{transform:translate(-1px,-1px);filter:hue-rotate(180deg)}
+  80%{transform:translate(2px,1px);filter:hue-rotate(-45deg)}
+  100%{transform:translate(0);filter:hue-rotate(0)}
+}
+</style>
+</head>
+<body>
+
+<div id="start-btn">
+  <h1>Artist vs Agent</h1>
+  <p>Click anywhere to begin</p>
+</div>
+
+<canvas id="c"></canvas>
+
+<div id="overlay">
+  <div id="title-text"></div>
+  <div id="subtitle-text"></div>
+</div>
+
+<div id="vs-badge">VS</div>
+
+<div id="hud">
+  <div class="hud-channel">
+    GOOGLE
+    <div class="bar-wrap"><div class="bar-fill human" id="bar-g-h"></div></div>
+    <div class="bar-wrap"><div class="bar-fill ai" id="bar-g-a"></div></div>
+    <div class="hud-label">human / ai</div>
+  </div>
+  <div class="hud-channel">
+    META
+    <div class="bar-wrap"><div class="bar-fill human" id="bar-m-h"></div></div>
+    <div class="bar-wrap"><div class="bar-fill ai" id="bar-m-a"></div></div>
+    <div class="hud-label">human / ai</div>
+  </div>
+  <div class="hud-channel">
+    EMAIL
+    <div class="bar-wrap"><div class="bar-fill human" id="bar-e-h"></div></div>
+    <div class="bar-wrap"><div class="bar-fill ai" id="bar-e-a"></div></div>
+    <div class="hud-label">human / ai</div>
+  </div>
+</div>
+
+<div id="metrics-prompt">
+  <p>What metrics prove a brand is actually working?</p>
+  <div class="cta">Comment your thoughts below</div>
+</div>
+
+<div id="progress"><div id="progress-fill"></div></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SCRIPT TIMELINE — each cue has text, timing, tone, and visual mode
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const script = [
+  // [startSec, duration, spokenText, displayHTML, subtitle, visualMode, tone]
+  { t:0,   dur:4.5, speak:"Welcome to Day SIX of our journey.",
+    html:'Welcome to Day <span class="big fire">SIX</span>',
+    sub:'of our journey.', mode:'intro', tone:'dramatic' },
+
+  { t:5.5, dur:3.5, speak:"ONE brand, crafted by human hands.",
+    html:'<span class="human">ONE</span> brand',
+    sub:'crafted by human hands.', mode:'human-side', tone:'calm' },
+
+  { t:10,  dur:3, speak:"ONE, generated by A.I.",
+    html:'<span class="ai">ONE</span> generated by A.I.',
+    sub:'', mode:'ai-side', tone:'calm' },
+
+  { t:14,  dur:4, speak:"Same constraints. Same timeline.",
+    html:'Same constraints. Same timeline.',
+    sub:'', mode:'split', tone:'matter-of-fact' },
+
+  { t:19,  dur:4, speak:"We are watching who survives the fire.",
+    html:'We are watching...<br/>who survives the <span class="fire">fire</span>.',
+    sub:'', mode:'fire', tone:'awe' },
+
+  { t:24.5,dur:2.5, speak:"To win, you need to PERFORM.",
+    html:'To win, you need to <span class="big gold">PERFORM</span>.',
+    sub:'', mode:'versus', tone:'fast' },
+
+  { t:28,  dur:5, speak:"Three channels. Google. Meta. Email.",
+    html:'Three channels.<br/><span class="accent">Google.</span> <span class="accent">Meta.</span> <span class="accent">Email.</span>',
+    sub:'', mode:'channels', tone:'fast' },
+
+  { t:34,  dur:4, speak:"Same creative volume. Same spend. Same conditions.",
+    html:'Same creative volume.<br/>Same spend. Same conditions.',
+    sub:'', mode:'equalise', tone:'matter-of-fact' },
+
+  { t:39,  dur:4, speak:"Both brands go head-to-head, across ALL THREE.",
+    html:'Both brands go <span class="fire">head-to-head</span>...<br/>across <span class="big">ALL THREE</span>.',
+    sub:'', mode:'battle', tone:'dramatic' },
+
+  { t:44.5,dur:3.5, speak:"Category ONE is performance.",
+    html:'Category <span class="big gold">ONE</span>',
+    sub:'is performance.', mode:'data-reveal', tone:'calm' },
+
+  { t:49,  dur:4, speak:"HARD DATA. Clicks, conversions, results.",
+    html:'<span class="big">HARD DATA.</span><br/>Clicks... conversions... results.',
+    sub:'', mode:'metrics', tone:'calm' },
+
+  { t:54,  dur:3.5, speak:"The stuff that ACTUALLY pays the bills.",
+    html:'The stuff that <span class="gold">ACTUALLY</span> pays the bills.',
+    sub:'', mode:'metrics', tone:'reflective' },
+
+  { t:58.5,dur:2, speak:"No opinions. Just numbers.",
+    html:'No opinions.<br/><span class="big accent">Just numbers.</span>',
+    sub:'', mode:'numbers', tone:'deadpan' },
+
+  { t:62,  dur:2.5, speak:"Category TWO?",
+    html:'<span class="whisper">Category TWO?</span>',
+    sub:'', mode:'mystery', tone:'whisper' },
+
+  { t:65.5,dur:4, speak:"We're keeping THAT one, locked, for now.",
+    html:'We\'re keeping that one...<br/><span class="fire">locked</span>... for now.',
+    sub:'', mode:'locked', tone:'matter-of-fact' },
+
+  { t:70.5,dur:3.5, speak:"It will reveal itself, when the time is right.",
+    html:'It will reveal itself...<br/>when the time is right.',
+    sub:'', mode:'mystery-fade', tone:'awe' },
+
+  { t:75.5,dur:3.5, speak:"WE handle the operational data gathering.",
+    html:'WE handle the operational data gathering.',
+    sub:'', mode:'operational', tone:'calm' },
+
+  { t:80,  dur:3, speak:"But YOU, set the benchmark.",
+    html:'But <span class="big gold">YOU</span> set the benchmark.',
+    sub:'', mode:'you', tone:'calm' },
+
+  { t:84,  dur:4, speak:"What METRICS prove a brand is actually working?",
+    html:'What <span class="accent">METRICS</span> prove a brand is actually working?',
+    sub:'', mode:'question', tone:'reflective' },
+
+  { t:89,  dur:2.5, speak:"Comment your thoughts below.",
+    html:'Comment your thoughts below.',
+    sub:'', mode:'cta', tone:'calm' },
+
+  { t:92.5,dur:3, speak:"See you again, soon.",
+    html:'See you again...<br/><span class="accent">soon.</span>',
+    sub:'', mode:'outro', tone:'calm' },
+];
+
+const TOTAL_DURATION = 97; // seconds
+
+/* ═══════════════════════════════════════════════════════════════════════
+   THREE.JS SETUP
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = 1.0;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050508);
+scene.fog = new THREE.FogExp2(0x050508, 0.08);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(0, 0, 30);
+
+/* ═══ Lighting ═══ */
+const ambientLight = new THREE.AmbientLight(0x111122, 0.5);
+scene.add(ambientLight);
+
+const keyLight = new THREE.PointLight(0x6ec6ff, 2, 100);
+keyLight.position.set(10, 15, 20);
+scene.add(keyLight);
+
+const fireLight = new THREE.PointLight(0xff4d2a, 0, 60);
+fireLight.position.set(-5, 0, 10);
+scene.add(fireLight);
+
+const humanLight = new THREE.PointLight(0xff6b9d, 0, 50);
+humanLight.position.set(-15, 0, 5);
+scene.add(humanLight);
+
+const aiLight = new THREE.PointLight(0x6ec6ff, 0, 50);
+aiLight.position.set(15, 0, 5);
+scene.add(aiLight);
+
+/* ═══ Particle Systems ═══ */
+
+// Main ambient particles
+const PARTICLE_COUNT = 3000;
+const particleGeom = new THREE.BufferGeometry();
+const pPositions = new Float32Array(PARTICLE_COUNT * 3);
+const pVelocities = new Float32Array(PARTICLE_COUNT * 3);
+const pColors = new Float32Array(PARTICLE_COUNT * 3);
+const pSizes = new Float32Array(PARTICLE_COUNT);
+const pPhases = new Float32Array(PARTICLE_COUNT);
+
+for (let i = 0; i < PARTICLE_COUNT; i++) {
+  const i3 = i * 3;
+  pPositions[i3]     = (Math.random() - 0.5) * 80;
+  pPositions[i3 + 1] = (Math.random() - 0.5) * 60;
+  pPositions[i3 + 2] = (Math.random() - 0.5) * 40 - 5;
+  pVelocities[i3]     = (Math.random() - 0.5) * 0.02;
+  pVelocities[i3 + 1] = (Math.random() - 0.5) * 0.02;
+  pVelocities[i3 + 2] = (Math.random() - 0.5) * 0.01;
+  pColors[i3]     = 0.4 + Math.random() * 0.2;
+  pColors[i3 + 1] = 0.5 + Math.random() * 0.3;
+  pColors[i3 + 2] = 0.8 + Math.random() * 0.2;
+  pSizes[i] = 0.5 + Math.random() * 2;
+  pPhases[i] = Math.random() * Math.PI * 2;
+}
+
+particleGeom.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+particleGeom.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
+particleGeom.setAttribute('size', new THREE.BufferAttribute(pSizes, 1));
+
+const particleMat = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime: { value: 0 },
+    uMode: { value: 0 },
+    uIntensity: { value: 0.5 },
+  },
+  vertexShader: `
+    attribute float size;
+    attribute vec3 color;
+    uniform float uTime;
+    uniform float uMode;
+    uniform float uIntensity;
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main() {
+      vColor = color;
+      vec3 pos = position;
+
+      // Mode-based movement
+      float modeInfluence = uMode;
+
+      // Breathing motion
+      pos.x += sin(uTime * 0.3 + position.y * 0.1) * 0.5;
+      pos.y += cos(uTime * 0.2 + position.x * 0.1) * 0.4;
+
+      // Split mode — particles divide left/right
+      if (modeInfluence > 2.5 && modeInfluence < 3.5) {
+        float side = sign(position.x);
+        pos.x += side * 5.0 * uIntensity;
+      }
+
+      // Fire mode — upward turbulence
+      if (modeInfluence > 4.5 && modeInfluence < 5.5) {
+        pos.y += sin(uTime * 3.0 + position.x * 2.0) * 2.0 * uIntensity;
+        pos.x += cos(uTime * 2.5 + position.y * 1.5) * 1.5 * uIntensity;
+      }
+
+      // Vortex mode — spiral inward
+      if (modeInfluence > 6.5 && modeInfluence < 8.5) {
+        float angle = atan(pos.y, pos.x) + uTime * 0.5;
+        float radius = length(pos.xy);
+        pos.x = cos(angle) * radius;
+        pos.y = sin(angle) * radius;
+      }
+
+      // Converge to centre
+      if (modeInfluence > 9.5) {
+        pos = mix(pos, vec3(0.0), uIntensity * 0.3);
+      }
+
+      vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
+      gl_PointSize = size * uIntensity * (200.0 / -mvPos.z);
+      gl_Position = projectionMatrix * mvPos;
+
+      float dist = length(pos.xy);
+      vAlpha = smoothstep(50.0, 5.0, dist) * uIntensity;
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main() {
+      float d = length(gl_PointCoord - 0.5);
+      if (d > 0.5) discard;
+      float alpha = smoothstep(0.5, 0.1, d) * vAlpha;
+      gl_FragColor = vec4(vColor, alpha * 0.7);
+    }
+  `,
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+});
+
+const particles = new THREE.Points(particleGeom, particleMat);
+scene.add(particles);
+
+// Fire particles
+const FIRE_COUNT = 1500;
+const fireGeom = new THREE.BufferGeometry();
+const fPos = new Float32Array(FIRE_COUNT * 3);
+const fCol = new Float32Array(FIRE_COUNT * 3);
+const fSize = new Float32Array(FIRE_COUNT);
+const fLife = new Float32Array(FIRE_COUNT);
+
+for (let i = 0; i < FIRE_COUNT; i++) {
+  fPos[i*3]   = (Math.random()-0.5)*20;
+  fPos[i*3+1] = Math.random()*-30;
+  fPos[i*3+2] = (Math.random()-0.5)*10 - 5;
+  fCol[i*3]   = 1.0;
+  fCol[i*3+1] = 0.3 + Math.random()*0.4;
+  fCol[i*3+2] = 0.1;
+  fSize[i] = 1 + Math.random()*3;
+  fLife[i] = Math.random();
+}
+fireGeom.setAttribute('position', new THREE.BufferAttribute(fPos, 3));
+fireGeom.setAttribute('color', new THREE.BufferAttribute(fCol, 3));
+
+const fireMat = new THREE.ShaderMaterial({
+  uniforms: { uTime:{value:0}, uActive:{value:0} },
+  vertexShader: `
+    attribute vec3 color;
+    uniform float uTime;
+    uniform float uActive;
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main(){
+      vColor = color;
+      vec3 pos = position;
+      float life = fract(pos.y * 0.03 + uTime * 0.8);
+      pos.y = mix(-20.0, 30.0, life);
+      pos.x += sin(uTime * 2.0 + position.x) * 2.0 * life;
+      pos.z += cos(uTime * 1.5 + position.z) * 1.5 * life;
+      vec4 mv = modelViewMatrix * vec4(pos, 1.0);
+      gl_PointSize = mix(0.5, 4.0, 1.0 - life) * uActive * (150.0 / -mv.z);
+      gl_Position = projectionMatrix * mv;
+      vAlpha = (1.0 - life) * uActive;
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main(){
+      float d = length(gl_PointCoord - 0.5);
+      if(d > 0.5) discard;
+      float a = smoothstep(0.5, 0.0, d) * vAlpha;
+      gl_FragColor = vec4(vColor, a * 0.8);
+    }
+  `,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+});
+
+const fireParticles = new THREE.Points(fireGeom, fireMat);
+scene.add(fireParticles);
+
+// Data stream particles (for metrics visualisation)
+const DATA_COUNT = 800;
+const dataGeom = new THREE.BufferGeometry();
+const dPos = new Float32Array(DATA_COUNT * 3);
+const dCol = new Float32Array(DATA_COUNT * 3);
+for (let i = 0; i < DATA_COUNT; i++) {
+  dPos[i*3]   = (Math.random()-0.5)*40;
+  dPos[i*3+1] = (Math.random()-0.5)*30;
+  dPos[i*3+2] = (Math.random()-0.5)*10 - 5;
+  const isHuman = i < DATA_COUNT/2;
+  dCol[i*3]   = isHuman ? 1.0 : 0.43;
+  dCol[i*3+1] = isHuman ? 0.42 : 0.78;
+  dCol[i*3+2] = isHuman ? 0.62 : 1.0;
+}
+dataGeom.setAttribute('position', new THREE.BufferAttribute(dPos, 3));
+dataGeom.setAttribute('color', new THREE.BufferAttribute(dCol, 3));
+
+const dataMat = new THREE.ShaderMaterial({
+  uniforms: { uTime:{value:0}, uActive:{value:0} },
+  vertexShader: `
+    attribute vec3 color;
+    uniform float uTime;
+    uniform float uActive;
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main(){
+      vColor = color;
+      vec3 pos = position;
+      // Stream downward like data
+      pos.y = mod(pos.y - uTime * 8.0, 30.0) - 15.0;
+      pos.x += sin(pos.y * 0.5 + uTime) * 0.5;
+      vec4 mv = modelViewMatrix * vec4(pos, 1.0);
+      gl_PointSize = 1.5 * uActive * (100.0 / -mv.z);
+      gl_Position = projectionMatrix * mv;
+      vAlpha = uActive * 0.8;
+    }
+  `,
+  fragmentShader: `
+    varying vec3 vColor; varying float vAlpha;
+    void main(){
+      float d = length(gl_PointCoord - 0.5);
+      if(d > 0.5) discard;
+      gl_FragColor = vec4(vColor, smoothstep(0.5,0.0,d)*vAlpha);
+    }
+  `,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+});
+const dataParticles = new THREE.Points(dataGeom, dataMat);
+scene.add(dataParticles);
+
+/* ═══ Geometric Objects ═══ */
+
+// Central ring (represents the arena)
+const ringGeom = new THREE.TorusGeometry(8, 0.08, 16, 100);
+const ringMat = new THREE.MeshStandardMaterial({
+  color: 0x6ec6ff, emissive: 0x6ec6ff, emissiveIntensity: 0.3,
+  metalness: 1, roughness: 0.3,
+});
+const ring = new THREE.Mesh(ringGeom, ringMat);
+ring.rotation.x = Math.PI / 2;
+ring.visible = false;
+scene.add(ring);
+
+// Lock mesh (for "locked" moment)
+const lockGroup = new THREE.Group();
+const lockBodyGeom = new THREE.BoxGeometry(3, 3, 0.5);
+const lockShackleGeom = new THREE.TorusGeometry(1.2, 0.2, 8, 20, Math.PI);
+const lockMat = new THREE.MeshStandardMaterial({
+  color: 0xff4d2a, emissive: 0xff4d2a, emissiveIntensity: 0.5,
+  metalness: 0.8, roughness: 0.2,
+});
+const lockBody = new THREE.Mesh(lockBodyGeom, lockMat);
+const lockShackle = new THREE.Mesh(lockShackleGeom, lockMat.clone());
+lockShackle.position.y = 1.5;
+lockGroup.add(lockBody);
+lockGroup.add(lockShackle);
+lockGroup.visible = false;
+lockGroup.position.z = 5;
+scene.add(lockGroup);
+
+// Question mark (for mystery/question moments)
+// Built from a torus arc + sphere
+const qGroup = new THREE.Group();
+const qCurve = new THREE.Mesh(
+  new THREE.TorusGeometry(2, 0.3, 8, 20, Math.PI * 1.5),
+  new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffd700, emissiveIntensity: 0.4, metalness: 0.9, roughness: 0.1 })
+);
+qCurve.rotation.z = Math.PI * 0.25;
+const qDot = new THREE.Mesh(
+  new THREE.SphereGeometry(0.4, 16, 16),
+  new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffd700, emissiveIntensity: 0.5, metalness: 0.9, roughness: 0.1 })
+);
+qDot.position.y = -3;
+qGroup.add(qCurve); qGroup.add(qDot);
+qGroup.visible = false;
+qGroup.position.z = 5;
+scene.add(qGroup);
+
+/* ═══ Post-Processing ═══ */
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.8, 0.4, 0.85);
+composer.addPass(bloom);
+
+// Chromatic aberration
+const chromaShader = {
+  uniforms: { tDiffuse:{value:null}, uStrength:{value:0.002} },
+  vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader:`uniform sampler2D tDiffuse;uniform float uStrength;varying vec2 vUv;void main(){vec2 d=vUv-0.5;float dist=dot(d,d);float off=uStrength*dist;float r=texture2D(tDiffuse,vUv+d*off).r;float g=texture2D(tDiffuse,vUv).g;float b=texture2D(tDiffuse,vUv-d*off).b;gl_FragColor=vec4(r,g,b,1.0);}`,
+};
+const chromaPass = new ShaderPass(chromaShader);
+composer.addPass(chromaPass);
+
+// Scanline + vignette
+const scanShader = {
+  uniforms: { tDiffuse:{value:null}, uTime:{value:0}, uScanIntensity:{value:0.03}, uVignette:{value:0.4} },
+  vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader:`
+    uniform sampler2D tDiffuse;uniform float uTime;uniform float uScanIntensity;uniform float uVignette;
+    varying vec2 vUv;
+    void main(){
+      vec4 c=texture2D(tDiffuse,vUv);
+      float scan=sin(vUv.y*400.0+uTime*5.0)*uScanIntensity;
+      c.rgb+=scan;
+      vec2 uv=(vUv-0.5)*2.0;
+      float v=1.0-dot(uv,uv)*uVignette;
+      c.rgb*=clamp(v,0.0,1.0);
+      c.rgb=mix(c.rgb,vec3(dot(c.rgb,vec3(0.299,0.587,0.114))),0.05);
+      gl_FragColor=c;
+    }
+  `,
+};
+composer.addPass(new ShaderPass(scanShader));
+composer.addPass(new OutputPass());
+
+/* ═══════════════════════════════════════════════════════════════════════
+   VOICEOVER — Web Speech API (placeholder for ElevenLabs)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+let voiceReady = false;
+let selectedVoice = null;
+
+function initVoices() {
+  const voices = speechSynthesis.getVoices();
+  // Prefer a deep/dramatic English voice
+  selectedVoice = voices.find(v => /Daniel|Google UK Male|Samantha|Alex|Aaron/i.test(v.name) && /en/i.test(v.lang))
+    || voices.find(v => /en-(GB|US|AU)/i.test(v.lang) && !/female/i.test(v.name))
+    || voices.find(v => /en/i.test(v.lang))
+    || voices[0];
+  voiceReady = !!selectedVoice;
+}
+
+speechSynthesis.onvoiceschanged = initVoices;
+initVoices();
+
+function speak(text, rate = 0.92, pitch = 0.85) {
+  if (!voiceReady) return;
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.voice = selectedVoice;
+  utt.rate = rate;
+  utt.pitch = pitch;
+  utt.volume = 1;
+  speechSynthesis.speak(utt);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   EXPERIENCE ENGINE — orchestrates visuals + voice + timing
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const titleEl = document.getElementById('title-text');
+const subEl = document.getElementById('subtitle-text');
+const vsBadge = document.getElementById('vs-badge');
+const hudEl = document.getElementById('hud');
+const metricsPrompt = document.getElementById('metrics-prompt');
+const progressFill = document.getElementById('progress-fill');
+
+let startTime = 0;
+let running = false;
+let currentCueIndex = -1;
+let activeModes = new Set();
+
+// Visual state
+const vState = {
+  particleMode: 0,
+  particleIntensity: 0.5,
+  fireActive: 0,
+  dataActive: 0,
+  ringVisible: false,
+  lockVisible: false,
+  questionVisible: false,
+  cameraTarget: new THREE.Vector3(0, 0, 0),
+  cameraShake: 0,
+  bloomStrength: 0.8,
+  chromaStrength: 0.002,
+  bgColor: new THREE.Color(0x050508),
+};
+
+// Mode-to-visual mapping
+const modeVisuals = {
+  'intro': () => {
+    vState.particleIntensity = 0.8;
+    vState.bloomStrength = 1.2;
+    vState.cameraShake = 0.02;
+  },
+  'human-side': () => {
+    vState.particleMode = 1;
+    humanLight.intensity = 3;
+    aiLight.intensity = 0;
+    camera.position.x = -3;
+  },
+  'ai-side': () => {
+    vState.particleMode = 2;
+    humanLight.intensity = 0;
+    aiLight.intensity = 3;
+    camera.position.x = 3;
+  },
+  'split': () => {
+    vState.particleMode = 3;
+    humanLight.intensity = 2;
+    aiLight.intensity = 2;
+    camera.position.x = 0;
+    ring.visible = true;
+    vState.ringVisible = true;
+  },
+  'fire': () => {
+    vState.fireActive = 1;
+    vState.particleMode = 5;
+    fireLight.intensity = 5;
+    vState.bloomStrength = 1.8;
+    vState.chromaStrength = 0.008;
+    vState.cameraShake = 0.05;
+    titleEl.classList.add('glitch');
+    setTimeout(() => titleEl.classList.remove('glitch'), 150);
+  },
+  'versus': () => {
+    vsBadge.style.opacity = '1';
+    vState.cameraShake = 0.04;
+    vState.chromaStrength = 0.006;
+    setTimeout(() => { vsBadge.style.opacity = '0'; }, 2000);
+  },
+  'channels': () => {
+    hudEl.classList.add('visible');
+    vState.dataActive = 0.5;
+    ring.visible = true;
+    // Animate bars
+    animateBars(40, 35, 55, 50, 45, 40);
+  },
+  'equalise': () => {
+    animateBars(50, 50, 50, 50, 50, 50);
+    vState.particleMode = 7;
+  },
+  'battle': () => {
+    vState.fireActive = 0.6;
+    vState.particleMode = 7;
+    vState.bloomStrength = 1.5;
+    vState.cameraShake = 0.03;
+    fireLight.intensity = 3;
+    animateBars(65, 58, 72, 60, 48, 55);
+  },
+  'data-reveal': () => {
+    vState.dataActive = 1;
+    vState.particleMode = 8;
+    hudEl.classList.add('visible');
+  },
+  'metrics': () => {
+    vState.dataActive = 1;
+    vState.particleMode = 8;
+    animateBars(78, 65, 82, 70, 60, 72);
+  },
+  'numbers': () => {
+    vState.dataActive = 1;
+    vState.chromaStrength = 0.004;
+    vState.bgColor.set(0x080810);
+  },
+  'mystery': () => {
+    vState.particleIntensity = 0.3;
+    vState.bloomStrength = 0.5;
+    qGroup.visible = true;
+    vState.questionVisible = true;
+    hudEl.classList.remove('visible');
+  },
+  'locked': () => {
+    lockGroup.visible = true;
+    vState.lockVisible = true;
+    qGroup.visible = false;
+    vState.questionVisible = false;
+    vState.chromaStrength = 0.005;
+    fireLight.intensity = 2;
+  },
+  'mystery-fade': () => {
+    lockGroup.visible = false;
+    vState.lockVisible = false;
+    vState.particleIntensity = 0.4;
+    vState.bloomStrength = 0.6;
+  },
+  'operational': () => {
+    vState.dataActive = 0.6;
+    vState.particleMode = 8;
+    vState.particleIntensity = 0.6;
+  },
+  'you': () => {
+    vState.particleIntensity = 1.0;
+    vState.bloomStrength = 1.4;
+    vState.particleMode = 10;
+    camera.position.z = 25;
+  },
+  'question': () => {
+    qGroup.visible = true;
+    vState.questionVisible = true;
+    vState.bloomStrength = 1.0;
+  },
+  'cta': () => {
+    metricsPrompt.classList.add('visible');
+    qGroup.visible = false;
+    vState.questionVisible = false;
+  },
+  'outro': () => {
+    vState.particleIntensity = 0.3;
+    vState.fireActive = 0;
+    vState.dataActive = 0;
+    fireLight.intensity = 0;
+    humanLight.intensity = 0;
+    aiLight.intensity = 0;
+    vState.bloomStrength = 0.6;
+    metricsPrompt.classList.remove('visible');
+    hudEl.classList.remove('visible');
+  },
+};
+
+function animateBars(gh, gai, mh, mai, eh, eai) {
+  document.getElementById('bar-g-h').style.width = gh+'%';
+  document.getElementById('bar-g-a').style.width = gai+'%';
+  document.getElementById('bar-m-h').style.width = mh+'%';
+  document.getElementById('bar-m-a').style.width = mai+'%';
+  document.getElementById('bar-e-h').style.width = eh+'%';
+  document.getElementById('bar-e-a').style.width = eai+'%';
+}
+
+function resetVisuals() {
+  vState.particleMode = 0;
+  vState.particleIntensity = 0.5;
+  vState.fireActive = 0;
+  vState.dataActive = 0;
+  vState.cameraShake = 0;
+  vState.bloomStrength = 0.8;
+  vState.chromaStrength = 0.002;
+  vState.bgColor.set(0x050508);
+  fireLight.intensity = 0;
+  humanLight.intensity = 0;
+  aiLight.intensity = 0;
+  ring.visible = false;
+  lockGroup.visible = false;
+  qGroup.visible = false;
+  vState.ringVisible = false;
+  vState.lockVisible = false;
+  vState.questionVisible = false;
+}
+
+function triggerCue(cue) {
+  resetVisuals();
+
+  // Set text
+  titleEl.innerHTML = cue.html;
+  titleEl.classList.add('visible');
+  if (cue.sub) {
+    subEl.textContent = cue.sub;
+    subEl.classList.add('visible');
+  } else {
+    subEl.classList.remove('visible');
+  }
+
+  // Speak
+  const rateMap = { dramatic:0.85, calm:0.92, 'matter-of-fact':1.0, awe:0.8, fast:1.1, reflective:0.88, deadpan:1.05, whisper:0.75 };
+  const pitchMap = { dramatic:0.75, calm:0.9, 'matter-of-fact':1.0, awe:0.7, fast:1.0, reflective:0.85, deadpan:0.95, whisper:0.6 };
+  speak(cue.speak, rateMap[cue.tone] || 0.92, pitchMap[cue.tone] || 0.85);
+
+  // Apply visual mode
+  if (modeVisuals[cue.mode]) modeVisuals[cue.mode]();
+
+  // Schedule text fade-out
+  setTimeout(() => {
+    titleEl.classList.remove('visible');
+    subEl.classList.remove('visible');
+  }, cue.dur * 1000 - 500);
+}
+
+function startExperience() {
+  document.getElementById('start-btn').classList.add('hidden');
+  startTime = performance.now() / 1000;
+  running = true;
+  currentCueIndex = -1;
+  speechSynthesis.cancel();
+}
+
+document.getElementById('start-btn').addEventListener('click', startExperience);
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ANIMATION LOOP
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  const dt = clock.getDelta();
+
+  if (running) {
+    const elapsed = performance.now() / 1000 - startTime;
+    const progress = Math.min(elapsed / TOTAL_DURATION, 1);
+    progressFill.style.width = (progress * 100) + '%';
+
+    // Fire cues
+    for (let i = 0; i < script.length; i++) {
+      if (elapsed >= script[i].t && elapsed < script[i].t + script[i].dur && i !== currentCueIndex) {
+        currentCueIndex = i;
+        triggerCue(script[i]);
+        break;
+      }
+    }
+
+    // End of experience
+    if (elapsed >= TOTAL_DURATION) {
+      running = false;
+      titleEl.innerHTML = '';
+      titleEl.classList.remove('visible');
+    }
+  }
+
+  // Update particle uniforms
+  particleMat.uniforms.uTime.value = t;
+  particleMat.uniforms.uMode.value += (vState.particleMode - particleMat.uniforms.uMode.value) * 0.05;
+  particleMat.uniforms.uIntensity.value += (vState.particleIntensity - particleMat.uniforms.uIntensity.value) * 0.05;
+
+  // Fire particles
+  fireMat.uniforms.uTime.value = t;
+  fireMat.uniforms.uActive.value += (vState.fireActive - fireMat.uniforms.uActive.value) * 0.08;
+
+  // Data particles
+  dataMat.uniforms.uTime.value = t;
+  dataMat.uniforms.uActive.value += (vState.dataActive - dataMat.uniforms.uActive.value) * 0.06;
+
+  // Ring animation
+  if (ring.visible) {
+    ring.rotation.z += dt * 0.3;
+    ring.scale.setScalar(1 + Math.sin(t * 2) * 0.05);
+    ringMat.emissiveIntensity = 0.3 + Math.sin(t * 3) * 0.2;
+  }
+
+  // Lock rotation
+  if (lockGroup.visible) {
+    lockGroup.rotation.y += dt * 0.5;
+    lockGroup.position.y = Math.sin(t * 1.5) * 0.5;
+  }
+
+  // Question mark float
+  if (qGroup.visible) {
+    qGroup.rotation.y += dt * 0.3;
+    qGroup.position.y = Math.sin(t * 1.2) * 0.8;
+    qGroup.scale.setScalar(1 + Math.sin(t * 2) * 0.1);
+  }
+
+  // Camera
+  const targetZ = 30 + Math.sin(t * 0.15) * 3;
+  camera.position.z += (targetZ - camera.position.z) * 0.02;
+  camera.position.y = Math.sin(t * 0.2) * 1.5;
+
+  // Camera shake
+  if (vState.cameraShake > 0) {
+    camera.position.x += (Math.random() - 0.5) * vState.cameraShake;
+    camera.position.y += (Math.random() - 0.5) * vState.cameraShake;
+    vState.cameraShake *= 0.98;
+  }
+
+  camera.lookAt(0, 0, 0);
+
+  // Background colour lerp
+  scene.background.lerp(vState.bgColor, 0.05);
+
+  // Post-processing
+  bloom.strength += (vState.bloomStrength - bloom.strength) * 0.05;
+  chromaPass.uniforms.uStrength.value += (vState.chromaStrength - chromaPass.uniforms.uStrength.value) * 0.05;
+  scanShader.uniforms.uTime.value = t;
+
+  composer.render();
+}
+
+animate();
+
+/* ═══ Resize ═══ */
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const w = window.innerWidth, h = window.innerHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+    composer.setSize(w, h);
+  }, 150);
+});
+
+console.log('[Artist vs Agent] Loaded — click to begin');
+</script>
+</body>
+</html>
