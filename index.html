@@ -332,7 +332,8 @@ S.add(new THREE.Points(eG,eM));
 /* ═══ LOCK — procedural, imposing ═══ */
 const lockG=new THREE.Group();
 const lkM=new THREE.MeshStandardMaterial({color:0xff2200,emissive:0xff1100,emissiveIntensity:0.8,metalness:0.95,roughness:0.1});
-lockG.add(Object.assign(new THREE.Mesh(new THREE.BoxGeometry(4,5,1.5,4,4,2),lkM),{position:new THREE.Vector3(0,0,0)}));
+const lockBody=new THREE.Mesh(new THREE.BoxGeometry(4,5,1.5,4,4,2),lkM);
+lockG.add(lockBody);
 // Keyhole
 const khM=new THREE.MeshStandardMaterial({color:0x020204,emissive:0x000000,metalness:0,roughness:1});
 const kh=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,1.6,16),khM);
