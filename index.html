@@ -6,207 +6,202 @@
 <title>Artist vs Agent — Day 6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;800;900&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;600;800;900&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
   --font:'Inter',system-ui,sans-serif;
   --mono:'JetBrains Mono',monospace;
-  --bg:#050508;
-  --accent:#6ec6ff;
-  --fire:#ff4d2a;
-  --gold:#ffd700;
-  --human:#ff6b9d;
-  --ai:#6ec6ff;
+  --bg:#030306;
+  --human:#ff2d6a;
+  --ai:#00c8ff;
+  --fire:#ff4400;
+  --gold:#ffcc00;
+  --ember:rgba(255,68,0,0.15);
 }
 html,body{
   font-family:var(--font);background:var(--bg);color:#fff;
   overflow:hidden;width:100%;height:100%;
   -webkit-font-smoothing:antialiased;
+  cursor:default;
 }
-#c{position:fixed;inset:0;z-index:1}
+canvas#gl{position:fixed;inset:0;z-index:1}
 
-/* Overlay text layers */
-#overlay{
+/* ── Typography overlay ── */
+#text-layer{
   position:fixed;inset:0;z-index:10;
-  pointer-events:none;
   display:flex;align-items:center;justify-content:center;
-  flex-direction:column;
+  flex-direction:column;pointer-events:none;
+  padding:0 6vw;
 }
-#title-text{
-  font-weight:200;font-size:clamp(2rem,6vw,5rem);
-  letter-spacing:-0.03em;line-height:1.05;
-  text-align:center;opacity:0;
-  transition:opacity 0.5s ease, transform 0.5s ease;
-  transform:translateY(20px);
-}
-#title-text.visible{opacity:1;transform:translateY(0)}
-#title-text .accent{color:var(--accent)}
-#title-text .fire{color:var(--fire)}
-#title-text .human{color:var(--human)}
-#title-text .ai{color:var(--ai)}
-#title-text .gold{color:var(--gold)}
-#title-text .whisper{font-style:italic;font-weight:300;opacity:0.7}
-#title-text .big{font-weight:900;font-size:1.3em}
-
-#subtitle-text{
-  font-weight:300;font-size:clamp(0.9rem,1.8vw,1.3rem);
-  color:rgba(255,255,255,0.5);
-  margin-top:16px;text-align:center;
-  opacity:0;transition:opacity 0.4s ease;
-  letter-spacing:0.02em;
-}
-#subtitle-text.visible{opacity:1}
-
-/* VS badge */
-#vs-badge{
-  position:fixed;top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  font-family:var(--mono);font-weight:700;
-  font-size:clamp(3rem,8vw,6rem);
-  color:var(--fire);opacity:0;z-index:15;
-  text-shadow:0 0 40px rgba(255,77,42,0.6);
-  pointer-events:none;
-  transition:opacity 0.3s ease;
-}
-
-/* Data HUD */
-#hud{
-  position:fixed;bottom:40px;left:50%;
-  transform:translateX(-50%);z-index:12;
-  pointer-events:none;opacity:0;
-  transition:opacity 0.4s ease;
-  display:flex;gap:24px;
-}
-#hud.visible{opacity:1}
-.hud-channel{
-  text-align:center;font-family:var(--mono);
-  font-size:12px;letter-spacing:0.08em;
-  text-transform:uppercase;
-}
-.hud-channel .bar-wrap{
-  width:80px;height:4px;background:rgba(255,255,255,0.1);
-  border-radius:2px;margin:8px auto 4px;overflow:hidden;
-}
-.hud-channel .bar-fill{
-  height:100%;border-radius:2px;
-  transition:width 0.6s ease;width:0%;
-}
-.hud-channel .bar-fill.human{background:var(--human)}
-.hud-channel .bar-fill.ai{background:var(--ai)}
-.hud-label{color:rgba(255,255,255,0.35);font-size:10px;margin-top:2px}
-
-/* Start button */
-#start-btn{
-  position:fixed;inset:0;z-index:100;
-  display:flex;align-items:center;justify-content:center;
-  flex-direction:column;background:var(--bg);
-  cursor:pointer;
-  transition:opacity 0.5s ease;
-}
-#start-btn.hidden{opacity:0;pointer-events:none}
-#start-btn h1{
-  font-weight:200;font-size:clamp(2rem,5vw,4rem);
-  letter-spacing:-0.02em;margin-bottom:24px;
-}
-#start-btn p{
-  font-weight:300;font-size:14px;
-  color:rgba(255,255,255,0.4);
-  letter-spacing:0.1em;text-transform:uppercase;
-  animation:pulse 2s ease-in-out infinite;
-}
-@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
-
-/* Metrics prompt */
-#metrics-prompt{
-  position:fixed;bottom:60px;left:50%;
-  transform:translateX(-50%);z-index:15;
-  pointer-events:auto;opacity:0;
-  transition:opacity 0.5s ease;
+#main-text{
+  font-weight:100;font-size:clamp(1.8rem,5.5vw,4.8rem);
+  line-height:1.08;letter-spacing:-0.04em;
   text-align:center;
+  opacity:0;transform:scale(0.96) translateY(12px);
+  transition:opacity 0.6s cubic-bezier(.22,1,.36,1),transform 0.6s cubic-bezier(.22,1,.36,1);
+  will-change:opacity,transform;
+  text-shadow:0 0 60px rgba(0,200,255,0.08);
 }
-#metrics-prompt.visible{opacity:1}
-#metrics-prompt p{
-  font-weight:300;font-size:clamp(0.85rem,1.4vw,1.1rem);
-  color:rgba(255,255,255,0.6);margin-bottom:12px;
-}
-#metrics-prompt .cta{
-  display:inline-block;padding:12px 32px;
-  border:1px solid var(--accent);border-radius:6px;
-  color:var(--accent);font-weight:400;font-size:14px;
-  letter-spacing:0.06em;text-transform:uppercase;
-  cursor:pointer;transition:all 0.3s ease;
-  pointer-events:auto;
-}
-#metrics-prompt .cta:hover{background:var(--accent);color:var(--bg)}
+#main-text.on{opacity:1;transform:scale(1) translateY(0)}
+#main-text .h{color:var(--human)}
+#main-text .a{color:var(--ai)}
+#main-text .f{color:var(--fire)}
+#main-text .g{color:var(--gold)}
+#main-text .w{font-weight:900}
+#main-text .l{font-weight:200;opacity:0.6;font-style:italic}
+#main-text .num{font-family:var(--mono);font-weight:700;letter-spacing:0.05em}
 
-/* Progress bar */
-#progress{
-  position:fixed;bottom:0;left:0;
-  width:100%;height:3px;z-index:20;
-  background:rgba(255,255,255,0.05);
+#sub-text{
+  font-weight:300;font-size:clamp(0.85rem,1.6vw,1.15rem);
+  color:rgba(255,255,255,0.35);margin-top:14px;
+  text-align:center;letter-spacing:0.02em;
+  opacity:0;transition:opacity 0.4s ease 0.15s;
 }
-#progress-fill{
+#sub-text.on{opacity:1}
+
+/* ── VS flash ── */
+#vs{
+  position:fixed;inset:0;z-index:15;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;opacity:0;
+  transition:opacity 0.15s ease;
+}
+#vs span{
+  font-family:var(--mono);font-weight:900;
+  font-size:clamp(6rem,18vw,14rem);
+  background:linear-gradient(135deg,var(--human),var(--fire));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 80px rgba(255,45,106,0.5));
+}
+
+/* ── Data HUD ── */
+#hud{
+  position:fixed;bottom:48px;left:50%;transform:translateX(-50%);
+  z-index:12;pointer-events:none;
+  display:flex;gap:32px;
+  opacity:0;transition:opacity 0.5s ease;
+}
+#hud.on{opacity:1}
+.ch{text-align:center}
+.ch-name{
+  font-family:var(--mono);font-size:10px;
+  letter-spacing:0.14em;text-transform:uppercase;
+  color:rgba(255,255,255,0.4);margin-bottom:10px;
+}
+.ch-bars{display:flex;flex-direction:column;gap:4px}
+.bar{width:90px;height:3px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+.bar-inner{height:100%;border-radius:2px;width:0%;transition:width 1s cubic-bezier(.22,1,.36,1)}
+.bar-inner.h{background:var(--human)}
+.bar-inner.ai{background:var(--ai)}
+.ch-legend{
+  font-size:9px;color:rgba(255,255,255,0.25);
+  margin-top:6px;font-family:var(--mono);letter-spacing:0.08em;
+}
+
+/* ── CTA ── */
+#cta{
+  position:fixed;bottom:56px;left:50%;transform:translateX(-50%);
+  z-index:14;pointer-events:auto;text-align:center;
+  opacity:0;transition:opacity 0.6s ease;
+}
+#cta.on{opacity:1}
+#cta p{font-weight:300;font-size:0.95rem;color:rgba(255,255,255,0.5);margin-bottom:14px}
+#cta button{
+  background:none;border:1px solid var(--ai);color:var(--ai);
+  padding:11px 36px;border-radius:4px;
+  font-family:var(--font);font-size:13px;font-weight:400;
+  letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;
+  transition:all 0.3s ease;
+}
+#cta button:hover{background:var(--ai);color:var(--bg)}
+
+/* ── Progress ── */
+#prog{
+  position:fixed;bottom:0;left:0;width:100%;height:2px;z-index:20;
+  background:rgba(255,255,255,0.03);
+}
+#prog-fill{
   height:100%;width:0%;
   background:linear-gradient(90deg,var(--human),var(--ai));
-  transition:width 0.3s linear;
+  transition:width 0.2s linear;
 }
 
-/* Glitch effect */
-.glitch{animation:glitch 0.15s ease both}
-@keyframes glitch{
-  0%{transform:translate(0);filter:hue-rotate(0)}
-  20%{transform:translate(-3px,2px);filter:hue-rotate(90deg)}
-  40%{transform:translate(3px,-2px);filter:hue-rotate(-90deg)}
-  60%{transform:translate(-1px,-1px);filter:hue-rotate(180deg)}
-  80%{transform:translate(2px,1px);filter:hue-rotate(-45deg)}
-  100%{transform:translate(0);filter:hue-rotate(0)}
+/* ── Start ── */
+#start{
+  position:fixed;inset:0;z-index:100;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;background:var(--bg);cursor:pointer;
+  transition:opacity 0.7s ease;
+}
+#start.off{opacity:0;pointer-events:none}
+#start h1{
+  font-weight:100;font-size:clamp(2.2rem,5vw,4.2rem);
+  letter-spacing:-0.04em;
+}
+#start .sub{
+  font-weight:300;font-size:13px;color:rgba(255,255,255,0.3);
+  letter-spacing:0.12em;text-transform:uppercase;
+  margin-top:20px;animation:breathe 2.5s ease-in-out infinite;
+}
+@keyframes breathe{0%,100%{opacity:0.3}50%{opacity:0.8}}
+#start .day{
+  font-family:var(--mono);font-weight:700;font-size:clamp(0.7rem,1.2vw,0.9rem);
+  color:var(--fire);letter-spacing:0.2em;text-transform:uppercase;
+  margin-bottom:12px;
 }
 </style>
 </head>
 <body>
 
-<div id="start-btn">
+<div id="start">
+  <div class="day">Day 6</div>
   <h1>Artist vs Agent</h1>
-  <p>Click anywhere to begin</p>
+  <div class="sub">Click anywhere to begin</div>
 </div>
 
-<canvas id="c"></canvas>
+<canvas id="gl"></canvas>
 
-<div id="overlay">
-  <div id="title-text"></div>
-  <div id="subtitle-text"></div>
+<div id="text-layer">
+  <div id="main-text"></div>
+  <div id="sub-text"></div>
 </div>
 
-<div id="vs-badge">VS</div>
+<div id="vs"><span>VS</span></div>
 
 <div id="hud">
-  <div class="hud-channel">
-    GOOGLE
-    <div class="bar-wrap"><div class="bar-fill human" id="bar-g-h"></div></div>
-    <div class="bar-wrap"><div class="bar-fill ai" id="bar-g-a"></div></div>
-    <div class="hud-label">human / ai</div>
+  <div class="ch">
+    <div class="ch-name">Google</div>
+    <div class="ch-bars">
+      <div class="bar"><div class="bar-inner h" id="b-g-h"></div></div>
+      <div class="bar"><div class="bar-inner ai" id="b-g-a"></div></div>
+    </div>
+    <div class="ch-legend">human / ai</div>
   </div>
-  <div class="hud-channel">
-    META
-    <div class="bar-wrap"><div class="bar-fill human" id="bar-m-h"></div></div>
-    <div class="bar-wrap"><div class="bar-fill ai" id="bar-m-a"></div></div>
-    <div class="hud-label">human / ai</div>
+  <div class="ch">
+    <div class="ch-name">Meta</div>
+    <div class="ch-bars">
+      <div class="bar"><div class="bar-inner h" id="b-m-h"></div></div>
+      <div class="bar"><div class="bar-inner ai" id="b-m-a"></div></div>
+    </div>
+    <div class="ch-legend">human / ai</div>
   </div>
-  <div class="hud-channel">
-    EMAIL
-    <div class="bar-wrap"><div class="bar-fill human" id="bar-e-h"></div></div>
-    <div class="bar-wrap"><div class="bar-fill ai" id="bar-e-a"></div></div>
-    <div class="hud-label">human / ai</div>
+  <div class="ch">
+    <div class="ch-name">Email</div>
+    <div class="ch-bars">
+      <div class="bar"><div class="bar-inner h" id="b-e-h"></div></div>
+      <div class="bar"><div class="bar-inner ai" id="b-e-a"></div></div>
+    </div>
+    <div class="ch-legend">human / ai</div>
   </div>
 </div>
 
-<div id="metrics-prompt">
+<div id="cta">
   <p>What metrics prove a brand is actually working?</p>
-  <div class="cta">Comment your thoughts below</div>
+  <button>Comment your thoughts</button>
 </div>
 
-<div id="progress"><div id="progress-fill"></div></div>
+<div id="prog"><div id="prog-fill"></div></div>
 
 <script type="importmap">
 {
@@ -226,803 +221,836 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 /* ═══════════════════════════════════════════════════════════════════════
-   SCRIPT TIMELINE — each cue has text, timing, tone, and visual mode
+   CONSTANTS
    ═══════════════════════════════════════════════════════════════════════ */
-
-const script = [
-  // [startSec, duration, spokenText, displayHTML, subtitle, visualMode, tone]
-  { t:0,   dur:4.5, speak:"Welcome to Day SIX of our journey.",
-    html:'Welcome to Day <span class="big fire">SIX</span>',
-    sub:'of our journey.', mode:'intro', tone:'dramatic' },
-
-  { t:5.5, dur:3.5, speak:"ONE brand, crafted by human hands.",
-    html:'<span class="human">ONE</span> brand',
-    sub:'crafted by human hands.', mode:'human-side', tone:'calm' },
-
-  { t:10,  dur:3, speak:"ONE, generated by A.I.",
-    html:'<span class="ai">ONE</span> generated by A.I.',
-    sub:'', mode:'ai-side', tone:'calm' },
-
-  { t:14,  dur:4, speak:"Same constraints. Same timeline.",
-    html:'Same constraints. Same timeline.',
-    sub:'', mode:'split', tone:'matter-of-fact' },
-
-  { t:19,  dur:4, speak:"We are watching who survives the fire.",
-    html:'We are watching...<br/>who survives the <span class="fire">fire</span>.',
-    sub:'', mode:'fire', tone:'awe' },
-
-  { t:24.5,dur:2.5, speak:"To win, you need to PERFORM.",
-    html:'To win, you need to <span class="big gold">PERFORM</span>.',
-    sub:'', mode:'versus', tone:'fast' },
-
-  { t:28,  dur:5, speak:"Three channels. Google. Meta. Email.",
-    html:'Three channels.<br/><span class="accent">Google.</span> <span class="accent">Meta.</span> <span class="accent">Email.</span>',
-    sub:'', mode:'channels', tone:'fast' },
-
-  { t:34,  dur:4, speak:"Same creative volume. Same spend. Same conditions.",
-    html:'Same creative volume.<br/>Same spend. Same conditions.',
-    sub:'', mode:'equalise', tone:'matter-of-fact' },
-
-  { t:39,  dur:4, speak:"Both brands go head-to-head, across ALL THREE.",
-    html:'Both brands go <span class="fire">head-to-head</span>...<br/>across <span class="big">ALL THREE</span>.',
-    sub:'', mode:'battle', tone:'dramatic' },
-
-  { t:44.5,dur:3.5, speak:"Category ONE is performance.",
-    html:'Category <span class="big gold">ONE</span>',
-    sub:'is performance.', mode:'data-reveal', tone:'calm' },
-
-  { t:49,  dur:4, speak:"HARD DATA. Clicks, conversions, results.",
-    html:'<span class="big">HARD DATA.</span><br/>Clicks... conversions... results.',
-    sub:'', mode:'metrics', tone:'calm' },
-
-  { t:54,  dur:3.5, speak:"The stuff that ACTUALLY pays the bills.",
-    html:'The stuff that <span class="gold">ACTUALLY</span> pays the bills.',
-    sub:'', mode:'metrics', tone:'reflective' },
-
-  { t:58.5,dur:2, speak:"No opinions. Just numbers.",
-    html:'No opinions.<br/><span class="big accent">Just numbers.</span>',
-    sub:'', mode:'numbers', tone:'deadpan' },
-
-  { t:62,  dur:2.5, speak:"Category TWO?",
-    html:'<span class="whisper">Category TWO?</span>',
-    sub:'', mode:'mystery', tone:'whisper' },
-
-  { t:65.5,dur:4, speak:"We're keeping THAT one, locked, for now.",
-    html:'We\'re keeping that one...<br/><span class="fire">locked</span>... for now.',
-    sub:'', mode:'locked', tone:'matter-of-fact' },
-
-  { t:70.5,dur:3.5, speak:"It will reveal itself, when the time is right.",
-    html:'It will reveal itself...<br/>when the time is right.',
-    sub:'', mode:'mystery-fade', tone:'awe' },
-
-  { t:75.5,dur:3.5, speak:"WE handle the operational data gathering.",
-    html:'WE handle the operational data gathering.',
-    sub:'', mode:'operational', tone:'calm' },
-
-  { t:80,  dur:3, speak:"But YOU, set the benchmark.",
-    html:'But <span class="big gold">YOU</span> set the benchmark.',
-    sub:'', mode:'you', tone:'calm' },
-
-  { t:84,  dur:4, speak:"What METRICS prove a brand is actually working?",
-    html:'What <span class="accent">METRICS</span> prove a brand is actually working?',
-    sub:'', mode:'question', tone:'reflective' },
-
-  { t:89,  dur:2.5, speak:"Comment your thoughts below.",
-    html:'Comment your thoughts below.',
-    sub:'', mode:'cta', tone:'calm' },
-
-  { t:92.5,dur:3, speak:"See you again, soon.",
-    html:'See you again...<br/><span class="accent">soon.</span>',
-    sub:'', mode:'outro', tone:'calm' },
-];
-
-const TOTAL_DURATION = 97; // seconds
+const HUMAN = new THREE.Color(0xff2d6a);
+const AI    = new THREE.Color(0x00c8ff);
+const FIRE  = new THREE.Color(0xff4400);
+const GOLD  = new THREE.Color(0xffcc00);
+const BG    = new THREE.Color(0x030306);
 
 /* ═══════════════════════════════════════════════════════════════════════
-   THREE.JS SETUP
+   RENDERER
    ═══════════════════════════════════════════════════════════════════════ */
-
-const canvas = document.getElementById('c');
+const canvas = document.getElementById('gl');
+const W = () => window.innerWidth, H = () => window.innerHeight;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setSize(W(), H());
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.toneMapping = THREE.NeutralToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.9;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x050508);
-scene.fog = new THREE.FogExp2(0x050508, 0.08);
+scene.background = BG.clone();
 
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
-camera.position.set(0, 0, 30);
+const camera = new THREE.PerspectiveCamera(55, W() / H(), 0.1, 500);
+camera.position.set(0, 0, 40);
 
-/* ═══ Lighting ═══ */
-const ambientLight = new THREE.AmbientLight(0x111122, 0.5);
-scene.add(ambientLight);
+/* ═══════════════════════════════════════════════════════════════════════
+   CUSTOM SHADERS — the heart of the visual experience
+   ═══════════════════════════════════════════════════════════════════════ */
 
-const keyLight = new THREE.PointLight(0x6ec6ff, 2, 100);
-keyLight.position.set(10, 15, 20);
-scene.add(keyLight);
+// ── Organic Metaball Field (vertex displacement, noise-driven) ──────
+// Two competing organic forms — one human (warm), one AI (cool)
+// They morph, merge, split, and battle based on the script
 
-const fireLight = new THREE.PointLight(0xff4d2a, 0, 60);
-fireLight.position.set(-5, 0, 10);
-scene.add(fireLight);
+const FIELD_VERT = `
+  uniform float uTime;
+  uniform float uMorph;     // 0 = sphere, 1 = split into two masses
+  uniform float uFireIntensity;
+  uniform float uConverge;  // 1 = merge to centre
+  uniform vec3 uHumanPos;
+  uniform vec3 uAiPos;
+  varying vec3 vNormal;
+  varying vec3 vWorldPos;
+  varying float vFresnel;
+  varying float vNoise;
+  varying vec2 vUv;
 
-const humanLight = new THREE.PointLight(0xff6b9d, 0, 50);
-humanLight.position.set(-15, 0, 5);
-scene.add(humanLight);
+  // Simplex-like noise
+  vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
+  vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
+  vec4 perm(vec4 x){return mod289(((x*34.0)+1.0)*x);}
 
-const aiLight = new THREE.PointLight(0x6ec6ff, 0, 50);
-aiLight.position.set(15, 0, 5);
-scene.add(aiLight);
+  float noise3(vec3 p){
+    vec3 a=floor(p);vec3 d=p-a;d=d*d*(3.0-2.0*d);
+    vec4 b=a.xxyy+vec4(0.0,1.0,0.0,1.0);
+    vec4 k1=perm(b.xyxy);vec4 k2=perm(k1.xyxy+b.zzww);
+    vec4 c=k2+a.zzzz;vec4 k3=perm(c);vec4 k4=perm(c+1.0);
+    vec4 o1=fract(k3*(1.0/41.0));vec4 o2=fract(k4*(1.0/41.0));
+    vec4 o3=o2*d.z+o1*(1.0-d.z);
+    vec2 o4=o3.yw*d.x+o3.xz*(1.0-d.x);
+    return o4.y*d.y+o4.x*(1.0-d.y);
+  }
 
-/* ═══ Particle Systems ═══ */
+  float fbm(vec3 p){
+    float v=0.0;float a=0.5;
+    for(int i=0;i<5;i++){
+      v+=a*noise3(p);
+      p=p*2.1+vec3(1.7,9.2,4.1);
+      a*=0.5;
+    }
+    return v;
+  }
 
-// Main ambient particles
-const PARTICLE_COUNT = 3000;
-const particleGeom = new THREE.BufferGeometry();
-const pPositions = new Float32Array(PARTICLE_COUNT * 3);
-const pVelocities = new Float32Array(PARTICLE_COUNT * 3);
-const pColors = new Float32Array(PARTICLE_COUNT * 3);
-const pSizes = new Float32Array(PARTICLE_COUNT);
-const pPhases = new Float32Array(PARTICLE_COUNT);
+  void main(){
+    vUv = uv;
+    vec3 pos = position;
 
-for (let i = 0; i < PARTICLE_COUNT; i++) {
+    // Noise displacement — organic, alive
+    float n = fbm(pos * 1.2 + uTime * 0.15) * 2.0 - 1.0;
+    float n2 = fbm(pos * 2.5 + uTime * 0.3 + 100.0) * 2.0 - 1.0;
+    vNoise = n;
+
+    // Morph: split into two masses
+    float side = sign(pos.x + 0.001);
+    vec3 offset = vec3(0.0);
+    offset.x += side * uMorph * 6.0;
+
+    // Fire: violent displacement
+    float fireDisp = uFireIntensity * n2 * 3.0;
+    offset.y += fireDisp * sin(uTime * 4.0 + pos.x * 2.0);
+    offset.x += uFireIntensity * n * 1.5 * cos(uTime * 3.0 + pos.y);
+
+    // Converge
+    offset = mix(offset, -pos * 0.5, uConverge);
+
+    // Organic surface displacement
+    float disp = n * 0.8 + n2 * 0.3;
+    vec3 displaced = pos + normal * disp + offset;
+
+    vWorldPos = (modelMatrix * vec4(displaced, 1.0)).xyz;
+    vNormal = normalize(normalMatrix * normal);
+
+    // Fresnel
+    vec3 viewDir = normalize(cameraPosition - vWorldPos);
+    vFresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 3.0);
+
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(displaced, 1.0);
+  }
+`;
+
+const FIELD_FRAG = `
+  uniform float uTime;
+  uniform float uMorph;
+  uniform float uFireIntensity;
+  uniform vec3 uHumanColor;
+  uniform vec3 uAiColor;
+  uniform vec3 uFireColor;
+  uniform float uEmissive;
+  varying vec3 vNormal;
+  varying vec3 vWorldPos;
+  varying float vFresnel;
+  varying float vNoise;
+  varying vec2 vUv;
+
+  void main(){
+    // Colour based on world x-position (human left, AI right)
+    float side = smoothstep(-2.0, 2.0, vWorldPos.x);
+    vec3 baseColor = mix(uHumanColor, uAiColor, side);
+
+    // Fire overlay
+    baseColor = mix(baseColor, uFireColor, uFireIntensity * 0.6 * (0.5 + vNoise * 0.5));
+
+    // Lighting
+    vec3 lightDir = normalize(vec3(0.5, 1.0, 0.8));
+    float diff = max(dot(vNormal, lightDir), 0.0) * 0.6 + 0.4;
+
+    // Rim light
+    vec3 rim = mix(uHumanColor, uAiColor, side) * vFresnel * 1.5;
+
+    // Subsurface-style glow
+    float sss = pow(max(dot(-vNormal, lightDir), 0.0), 2.0) * 0.3;
+
+    vec3 col = baseColor * diff + rim + baseColor * sss;
+
+    // Emissive pulse
+    float pulse = sin(uTime * 3.0 + vWorldPos.y * 5.0) * 0.5 + 0.5;
+    col += baseColor * uEmissive * pulse * 0.4;
+
+    // Hot edges during fire
+    col += uFireColor * uFireIntensity * vFresnel * 2.0;
+
+    gl_FragColor = vec4(col, 0.92);
+  }
+`;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SCENE OBJECTS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+// ── The organic form — a high-detail icosphere with custom shader ────
+const fieldUniforms = {
+  uTime:          { value: 0 },
+  uMorph:         { value: 0 },
+  uFireIntensity: { value: 0 },
+  uConverge:      { value: 0 },
+  uHumanPos:      { value: new THREE.Vector3(-6, 0, 0) },
+  uAiPos:         { value: new THREE.Vector3(6, 0, 0) },
+  uHumanColor:    { value: HUMAN.clone() },
+  uAiColor:       { value: AI.clone() },
+  uFireColor:     { value: FIRE.clone() },
+  uEmissive:      { value: 0 },
+};
+
+const fieldMat = new THREE.ShaderMaterial({
+  uniforms: fieldUniforms,
+  vertexShader: FIELD_VERT,
+  fragmentShader: FIELD_FRAG,
+  transparent: true,
+  side: THREE.DoubleSide,
+  depthWrite: true,
+});
+
+const fieldGeom = new THREE.IcosahedronGeometry(8, 64);
+const field = new THREE.Mesh(fieldGeom, fieldMat);
+scene.add(field);
+
+// ── Ember particle system — thousands of tiny glowing sparks ────────
+const EMBER_COUNT = 6000;
+const emberGeom = new THREE.BufferGeometry();
+const ePos = new Float32Array(EMBER_COUNT * 3);
+const eVel = new Float32Array(EMBER_COUNT * 3);
+const ePhase = new Float32Array(EMBER_COUNT);
+const eSize = new Float32Array(EMBER_COUNT);
+const eSide = new Float32Array(EMBER_COUNT); // -1 human, +1 ai, 0 neutral
+
+for (let i = 0; i < EMBER_COUNT; i++) {
   const i3 = i * 3;
-  pPositions[i3]     = (Math.random() - 0.5) * 80;
-  pPositions[i3 + 1] = (Math.random() - 0.5) * 60;
-  pPositions[i3 + 2] = (Math.random() - 0.5) * 40 - 5;
-  pVelocities[i3]     = (Math.random() - 0.5) * 0.02;
-  pVelocities[i3 + 1] = (Math.random() - 0.5) * 0.02;
-  pVelocities[i3 + 2] = (Math.random() - 0.5) * 0.01;
-  pColors[i3]     = 0.4 + Math.random() * 0.2;
-  pColors[i3 + 1] = 0.5 + Math.random() * 0.3;
-  pColors[i3 + 2] = 0.8 + Math.random() * 0.2;
-  pSizes[i] = 0.5 + Math.random() * 2;
-  pPhases[i] = Math.random() * Math.PI * 2;
+  const theta = Math.random() * Math.PI * 2;
+  const phi = Math.acos(Math.random() * 2 - 1);
+  const r = 8 + Math.random() * 30;
+  ePos[i3]     = r * Math.sin(phi) * Math.cos(theta);
+  ePos[i3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+  ePos[i3 + 2] = r * Math.cos(phi) - 10;
+  eVel[i3]     = (Math.random() - 0.5) * 0.03;
+  eVel[i3 + 1] = (Math.random() - 0.5) * 0.03;
+  eVel[i3 + 2] = (Math.random() - 0.5) * 0.02;
+  ePhase[i] = Math.random() * Math.PI * 2;
+  eSize[i] = 0.3 + Math.random() * 1.5;
+  eSide[i] = i < EMBER_COUNT / 3 ? -1 : (i < EMBER_COUNT * 2 / 3 ? 1 : 0);
 }
+emberGeom.setAttribute('position', new THREE.BufferAttribute(ePos, 3));
+emberGeom.setAttribute('aPhase', new THREE.BufferAttribute(ePhase, 1));
+emberGeom.setAttribute('aSize', new THREE.BufferAttribute(eSize, 1));
+emberGeom.setAttribute('aSide', new THREE.BufferAttribute(eSide, 1));
 
-particleGeom.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
-particleGeom.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
-particleGeom.setAttribute('size', new THREE.BufferAttribute(pSizes, 1));
-
-const particleMat = new THREE.ShaderMaterial({
+const emberMat = new THREE.ShaderMaterial({
   uniforms: {
-    uTime: { value: 0 },
-    uMode: { value: 0 },
-    uIntensity: { value: 0.5 },
+    uTime:      { value: 0 },
+    uIntensity: { value: 0.4 },
+    uMorph:     { value: 0 },
+    uFire:      { value: 0 },
+    uConverge:  { value: 0 },
+    uDataMode:  { value: 0 },
+    uHumanCol:  { value: HUMAN.clone() },
+    uAiCol:     { value: AI.clone() },
+    uFireCol:   { value: FIRE.clone() },
   },
   vertexShader: `
-    attribute float size;
-    attribute vec3 color;
+    attribute float aPhase;
+    attribute float aSize;
+    attribute float aSide;
     uniform float uTime;
-    uniform float uMode;
     uniform float uIntensity;
-    varying vec3 vColor;
+    uniform float uMorph;
+    uniform float uFire;
+    uniform float uConverge;
+    uniform float uDataMode;
+    varying vec3 vCol;
     varying float vAlpha;
-    void main() {
-      vColor = color;
-      vec3 pos = position;
 
-      // Mode-based movement
-      float modeInfluence = uMode;
-
-      // Breathing motion
-      pos.x += sin(uTime * 0.3 + position.y * 0.1) * 0.5;
-      pos.y += cos(uTime * 0.2 + position.x * 0.1) * 0.4;
-
-      // Split mode — particles divide left/right
-      if (modeInfluence > 2.5 && modeInfluence < 3.5) {
-        float side = sign(position.x);
-        pos.x += side * 5.0 * uIntensity;
-      }
-
-      // Fire mode — upward turbulence
-      if (modeInfluence > 4.5 && modeInfluence < 5.5) {
-        pos.y += sin(uTime * 3.0 + position.x * 2.0) * 2.0 * uIntensity;
-        pos.x += cos(uTime * 2.5 + position.y * 1.5) * 1.5 * uIntensity;
-      }
-
-      // Vortex mode — spiral inward
-      if (modeInfluence > 6.5 && modeInfluence < 8.5) {
-        float angle = atan(pos.y, pos.x) + uTime * 0.5;
-        float radius = length(pos.xy);
-        pos.x = cos(angle) * radius;
-        pos.y = sin(angle) * radius;
-      }
-
-      // Converge to centre
-      if (modeInfluence > 9.5) {
-        pos = mix(pos, vec3(0.0), uIntensity * 0.3);
-      }
-
-      vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
-      gl_PointSize = size * uIntensity * (200.0 / -mvPos.z);
-      gl_Position = projectionMatrix * mvPos;
-
-      float dist = length(pos.xy);
-      vAlpha = smoothstep(50.0, 5.0, dist) * uIntensity;
-    }
-  `,
-  fragmentShader: `
-    varying vec3 vColor;
-    varying float vAlpha;
-    void main() {
-      float d = length(gl_PointCoord - 0.5);
-      if (d > 0.5) discard;
-      float alpha = smoothstep(0.5, 0.1, d) * vAlpha;
-      gl_FragColor = vec4(vColor, alpha * 0.7);
-    }
-  `,
-  transparent: true,
-  depthWrite: false,
-  blending: THREE.AdditiveBlending,
-});
-
-const particles = new THREE.Points(particleGeom, particleMat);
-scene.add(particles);
-
-// Fire particles
-const FIRE_COUNT = 1500;
-const fireGeom = new THREE.BufferGeometry();
-const fPos = new Float32Array(FIRE_COUNT * 3);
-const fCol = new Float32Array(FIRE_COUNT * 3);
-const fSize = new Float32Array(FIRE_COUNT);
-const fLife = new Float32Array(FIRE_COUNT);
-
-for (let i = 0; i < FIRE_COUNT; i++) {
-  fPos[i*3]   = (Math.random()-0.5)*20;
-  fPos[i*3+1] = Math.random()*-30;
-  fPos[i*3+2] = (Math.random()-0.5)*10 - 5;
-  fCol[i*3]   = 1.0;
-  fCol[i*3+1] = 0.3 + Math.random()*0.4;
-  fCol[i*3+2] = 0.1;
-  fSize[i] = 1 + Math.random()*3;
-  fLife[i] = Math.random();
-}
-fireGeom.setAttribute('position', new THREE.BufferAttribute(fPos, 3));
-fireGeom.setAttribute('color', new THREE.BufferAttribute(fCol, 3));
-
-const fireMat = new THREE.ShaderMaterial({
-  uniforms: { uTime:{value:0}, uActive:{value:0} },
-  vertexShader: `
-    attribute vec3 color;
-    uniform float uTime;
-    uniform float uActive;
-    varying vec3 vColor;
-    varying float vAlpha;
     void main(){
-      vColor = color;
       vec3 pos = position;
-      float life = fract(pos.y * 0.03 + uTime * 0.8);
-      pos.y = mix(-20.0, 30.0, life);
-      pos.x += sin(uTime * 2.0 + position.x) * 2.0 * life;
-      pos.z += cos(uTime * 1.5 + position.z) * 1.5 * life;
+
+      // Breathing
+      float breath = sin(uTime * 0.4 + aPhase) * 0.5 + 0.5;
+      pos += normalize(pos) * breath * 1.5;
+
+      // Morph: separate into two swarms
+      if(uMorph > 0.01){
+        float pull = aSide * uMorph * 10.0;
+        pos.x += pull;
+      }
+
+      // Fire: chaotic upward motion
+      if(uFire > 0.01){
+        pos.y += sin(uTime * 5.0 + aPhase * 3.0) * uFire * 6.0;
+        pos.x += cos(uTime * 4.0 + aPhase * 2.0) * uFire * 3.0;
+        pos.z += sin(uTime * 3.0 + aPhase) * uFire * 2.0;
+      }
+
+      // Data mode: organise into streams
+      if(uDataMode > 0.01){
+        float stream = floor(aPhase * 3.0);
+        float streamX = (stream - 1.0) * 12.0;
+        pos.x = mix(pos.x, streamX + sin(pos.y * 0.2 + uTime) * 2.0, uDataMode);
+        pos.y = mod(pos.y - uTime * 8.0, 60.0) - 30.0;
+        pos.z = mix(pos.z, -5.0 + cos(aPhase * 10.0 + uTime) * 3.0, uDataMode);
+      }
+
+      // Converge
+      if(uConverge > 0.01){
+        pos = mix(pos, vec3(0.0, 0.0, -5.0), uConverge * 0.6);
+      }
+
       vec4 mv = modelViewMatrix * vec4(pos, 1.0);
-      gl_PointSize = mix(0.5, 4.0, 1.0 - life) * uActive * (150.0 / -mv.z);
+      gl_PointSize = aSize * uIntensity * (180.0 / -mv.z);
       gl_Position = projectionMatrix * mv;
-      vAlpha = (1.0 - life) * uActive;
+
+      // Colour: side-based
+      vec3 humanC = vec3(1.0, 0.176, 0.416);
+      vec3 aiC = vec3(0.0, 0.784, 1.0);
+      vec3 fireC = vec3(1.0, 0.267, 0.0);
+      vec3 col = aSide < -0.5 ? humanC : (aSide > 0.5 ? aiC : mix(humanC, aiC, 0.5));
+      col = mix(col, fireC, uFire * 0.7);
+
+      vCol = col;
+      vAlpha = uIntensity * (0.5 + breath * 0.5) * smoothstep(60.0, 5.0, length(pos));
     }
   `,
   fragmentShader: `
-    varying vec3 vColor;
+    varying vec3 vCol;
     varying float vAlpha;
     void main(){
       float d = length(gl_PointCoord - 0.5);
       if(d > 0.5) discard;
-      float a = smoothstep(0.5, 0.0, d) * vAlpha;
-      gl_FragColor = vec4(vColor, a * 0.8);
+      float a = smoothstep(0.5, 0.05, d) * vAlpha;
+      gl_FragColor = vec4(vCol, a * 0.85);
     }
   `,
   transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
 });
 
-const fireParticles = new THREE.Points(fireGeom, fireMat);
-scene.add(fireParticles);
+const embers = new THREE.Points(emberGeom, emberMat);
+scene.add(embers);
 
-// Data stream particles (for metrics visualisation)
-const DATA_COUNT = 800;
-const dataGeom = new THREE.BufferGeometry();
-const dPos = new Float32Array(DATA_COUNT * 3);
-const dCol = new Float32Array(DATA_COUNT * 3);
-for (let i = 0; i < DATA_COUNT; i++) {
-  dPos[i*3]   = (Math.random()-0.5)*40;
-  dPos[i*3+1] = (Math.random()-0.5)*30;
-  dPos[i*3+2] = (Math.random()-0.5)*10 - 5;
-  const isHuman = i < DATA_COUNT/2;
-  dCol[i*3]   = isHuman ? 1.0 : 0.43;
-  dCol[i*3+1] = isHuman ? 0.42 : 0.78;
-  dCol[i*3+2] = isHuman ? 0.62 : 1.0;
+// ── Data rain particles — vertical streams for metrics moments ──────
+const RAIN_COUNT = 2000;
+const rainGeom = new THREE.BufferGeometry();
+const rPos = new Float32Array(RAIN_COUNT * 3);
+const rPhase = new Float32Array(RAIN_COUNT);
+const rStream = new Float32Array(RAIN_COUNT);
+for (let i = 0; i < RAIN_COUNT; i++) {
+  rPos[i*3]   = (Math.random()-0.5)*60;
+  rPos[i*3+1] = Math.random()*60 - 30;
+  rPos[i*3+2] = (Math.random()-0.5)*20 - 10;
+  rPhase[i] = Math.random() * Math.PI * 2;
+  rStream[i] = Math.floor(Math.random() * 3); // 0=google, 1=meta, 2=email
 }
-dataGeom.setAttribute('position', new THREE.BufferAttribute(dPos, 3));
-dataGeom.setAttribute('color', new THREE.BufferAttribute(dCol, 3));
+rainGeom.setAttribute('position', new THREE.BufferAttribute(rPos, 3));
+rainGeom.setAttribute('aPhase', new THREE.BufferAttribute(rPhase, 1));
+rainGeom.setAttribute('aStream', new THREE.BufferAttribute(rStream, 1));
 
-const dataMat = new THREE.ShaderMaterial({
-  uniforms: { uTime:{value:0}, uActive:{value:0} },
+const rainMat = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime: { value: 0 },
+    uActive: { value: 0 },
+  },
   vertexShader: `
-    attribute vec3 color;
+    attribute float aPhase;
+    attribute float aStream;
     uniform float uTime;
     uniform float uActive;
-    varying vec3 vColor;
     varying float vAlpha;
+    varying vec3 vCol;
     void main(){
-      vColor = color;
       vec3 pos = position;
-      // Stream downward like data
-      pos.y = mod(pos.y - uTime * 8.0, 30.0) - 15.0;
-      pos.x += sin(pos.y * 0.5 + uTime) * 0.5;
+      // Three vertical streams
+      float streamX = (aStream - 1.0) * 14.0;
+      pos.x = mix(pos.x, streamX + sin(uTime * 0.5 + aPhase) * 3.0, uActive);
+      pos.y = mod(pos.y - uTime * 12.0, 60.0) - 30.0;
+      pos.z = mix(pos.z, -8.0, uActive * 0.5);
       vec4 mv = modelViewMatrix * vec4(pos, 1.0);
-      gl_PointSize = 1.5 * uActive * (100.0 / -mv.z);
+      float size = mix(0.3, 1.8, uActive);
+      gl_PointSize = size * (120.0 / -mv.z);
       gl_Position = projectionMatrix * mv;
-      vAlpha = uActive * 0.8;
+      // Stream colours
+      vec3 cols[3];
+      cols[0] = vec3(0.26, 0.52, 0.96); // Google blue
+      cols[1] = vec3(0.0, 0.78, 1.0);    // Meta cyan
+      cols[2] = vec3(1.0, 0.8, 0.0);     // Email gold
+      int idx = int(aStream);
+      vCol = idx == 0 ? cols[0] : (idx == 1 ? cols[1] : cols[2]);
+      vAlpha = uActive * 0.7;
     }
   `,
   fragmentShader: `
-    varying vec3 vColor; varying float vAlpha;
+    varying float vAlpha;
+    varying vec3 vCol;
     void main(){
-      float d = length(gl_PointCoord - 0.5);
+      vec2 c = gl_PointCoord - 0.5;
+      // Elongated vertically — data streaks
+      float d = length(c * vec2(1.0, 0.3));
       if(d > 0.5) discard;
-      gl_FragColor = vec4(vColor, smoothstep(0.5,0.0,d)*vAlpha);
+      gl_FragColor = vec4(vCol, smoothstep(0.5, 0.0, d) * vAlpha);
     }
   `,
   transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
 });
-const dataParticles = new THREE.Points(dataGeom, dataMat);
-scene.add(dataParticles);
+const rain = new THREE.Points(rainGeom, rainMat);
+scene.add(rain);
 
-/* ═══ Geometric Objects ═══ */
+// ── Lock object (procedural — built from geometry) ──────────────────
+const lockGrp = new THREE.Group();
+const lockBodyMat = new THREE.MeshStandardMaterial({
+  color: 0xff2200, emissive: 0xff2200, emissiveIntensity: 0.6,
+  metalness: 0.9, roughness: 0.15,
+});
+const lockBody = new THREE.Mesh(new THREE.BoxGeometry(3.5, 4, 1.2, 4, 4, 2), lockBodyMat);
+// Keyhole — boolean-ish via a dark cylinder
+const keyholeMat = new THREE.MeshStandardMaterial({
+  color: 0x030306, metalness: 0, roughness: 1, emissive: 0x000000,
+});
+const keyhole = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.3, 16), keyholeMat);
+keyhole.rotation.x = Math.PI / 2;
+keyhole.position.set(0, -0.3, 0);
+lockBody.add(keyhole);
+const keyholeSlot = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.2, 1.3), keyholeMat);
+keyholeSlot.position.set(0, -1.0, 0);
+lockBody.add(keyholeSlot);
+lockGrp.add(lockBody);
+const shackleMat = new THREE.MeshStandardMaterial({
+  color: 0xcc4400, emissive: 0x881100, emissiveIntensity: 0.3,
+  metalness: 0.95, roughness: 0.1,
+});
+const shackle = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.35, 12, 24, Math.PI), shackleMat);
+shackle.position.set(0, 2, 0);
+lockGrp.add(shackle);
+lockGrp.position.set(0, 0, 8);
+lockGrp.visible = false;
+scene.add(lockGrp);
 
-// Central ring (represents the arena)
-const ringGeom = new THREE.TorusGeometry(8, 0.08, 16, 100);
+// ── Question mark ───────────────────────────────────────────────────
+const qGrp = new THREE.Group();
+const qMat = new THREE.MeshStandardMaterial({
+  color: 0xffcc00, emissive: 0xffaa00, emissiveIntensity: 0.7,
+  metalness: 0.8, roughness: 0.1,
+});
+const qArc = new THREE.Mesh(new THREE.TorusGeometry(2.2, 0.4, 12, 24, Math.PI * 1.6), qMat);
+qArc.rotation.z = Math.PI * 0.3;
+qArc.position.y = 0.5;
+qGrp.add(qArc);
+const qStem = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 1.5, 12), qMat.clone());
+qStem.position.set(0.6, -2.0, 0);
+qGrp.add(qStem);
+const qDot = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 16), qMat.clone());
+qDot.position.set(0.6, -3.5, 0);
+qGrp.add(qDot);
+qGrp.position.set(0, 0, 8);
+qGrp.visible = false;
+scene.add(qGrp);
+
+// ── Arena ring ──────────────────────────────────────────────────────
 const ringMat = new THREE.MeshStandardMaterial({
-  color: 0x6ec6ff, emissive: 0x6ec6ff, emissiveIntensity: 0.3,
-  metalness: 1, roughness: 0.3,
+  color: 0x6ec6ff, emissive: 0x00aaff, emissiveIntensity: 0.4,
+  metalness: 1, roughness: 0.2, transparent: true, opacity: 0.7,
 });
-const ring = new THREE.Mesh(ringGeom, ringMat);
-ring.rotation.x = Math.PI / 2;
-ring.visible = false;
-scene.add(ring);
+const ringMesh = new THREE.Mesh(new THREE.TorusGeometry(12, 0.06, 8, 128), ringMat);
+ringMesh.rotation.x = Math.PI / 2;
+ringMesh.visible = false;
+scene.add(ringMesh);
 
-// Lock mesh (for "locked" moment)
-const lockGroup = new THREE.Group();
-const lockBodyGeom = new THREE.BoxGeometry(3, 3, 0.5);
-const lockShackleGeom = new THREE.TorusGeometry(1.2, 0.2, 8, 20, Math.PI);
-const lockMat = new THREE.MeshStandardMaterial({
-  color: 0xff4d2a, emissive: 0xff4d2a, emissiveIntensity: 0.5,
-  metalness: 0.8, roughness: 0.2,
-});
-const lockBody = new THREE.Mesh(lockBodyGeom, lockMat);
-const lockShackle = new THREE.Mesh(lockShackleGeom, lockMat.clone());
-lockShackle.position.y = 1.5;
-lockGroup.add(lockBody);
-lockGroup.add(lockShackle);
-lockGroup.visible = false;
-lockGroup.position.z = 5;
-scene.add(lockGroup);
+// Second ring — fire coloured
+const ring2Mat = ringMat.clone();
+ring2Mat.color = FIRE.clone();
+ring2Mat.emissive = FIRE.clone();
+ring2Mat.emissiveIntensity = 0.3;
+const ring2 = new THREE.Mesh(new THREE.TorusGeometry(14, 0.04, 8, 128), ring2Mat);
+ring2.rotation.x = Math.PI / 2;
+ring2.visible = false;
+scene.add(ring2);
 
-// Question mark (for mystery/question moments)
-// Built from a torus arc + sphere
-const qGroup = new THREE.Group();
-const qCurve = new THREE.Mesh(
-  new THREE.TorusGeometry(2, 0.3, 8, 20, Math.PI * 1.5),
-  new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffd700, emissiveIntensity: 0.4, metalness: 0.9, roughness: 0.1 })
-);
-qCurve.rotation.z = Math.PI * 0.25;
-const qDot = new THREE.Mesh(
-  new THREE.SphereGeometry(0.4, 16, 16),
-  new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffd700, emissiveIntensity: 0.5, metalness: 0.9, roughness: 0.1 })
-);
-qDot.position.y = -3;
-qGroup.add(qCurve); qGroup.add(qDot);
-qGroup.visible = false;
-qGroup.position.z = 5;
-scene.add(qGroup);
+/* ═══════════════════════════════════════════════════════════════════════
+   LIGHTING
+   ═══════════════════════════════════════════════════════════════════════ */
+const ambLight = new THREE.AmbientLight(0x0a0a1a, 0.3);
+scene.add(ambLight);
 
-/* ═══ Post-Processing ═══ */
+const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
+mainLight.position.set(5, 10, 10);
+scene.add(mainLight);
+
+const humanLight = new THREE.PointLight(HUMAN, 0, 80);
+humanLight.position.set(-20, 0, 10);
+scene.add(humanLight);
+
+const aiLight = new THREE.PointLight(AI, 0, 80);
+aiLight.position.set(20, 0, 10);
+scene.add(aiLight);
+
+const fireLight = new THREE.PointLight(FIRE, 0, 60);
+fireLight.position.set(0, -5, 15);
+scene.add(fireLight);
+
+/* ═══════════════════════════════════════════════════════════════════════
+   POST-PROCESSING
+   ═══════════════════════════════════════════════════════════════════════ */
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.8, 0.4, 0.85);
+
+const bloom = new UnrealBloomPass(
+  new THREE.Vector2(W(), H()), 1.2, 0.5, 0.75
+);
 composer.addPass(bloom);
 
-// Chromatic aberration
 const chromaShader = {
-  uniforms: { tDiffuse:{value:null}, uStrength:{value:0.002} },
-  vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-  fragmentShader:`uniform sampler2D tDiffuse;uniform float uStrength;varying vec2 vUv;void main(){vec2 d=vUv-0.5;float dist=dot(d,d);float off=uStrength*dist;float r=texture2D(tDiffuse,vUv+d*off).r;float g=texture2D(tDiffuse,vUv).g;float b=texture2D(tDiffuse,vUv-d*off).b;gl_FragColor=vec4(r,g,b,1.0);}`,
+  uniforms: { tDiffuse:{value:null}, uStr:{value:0.003} },
+  vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;uniform float uStr;varying vec2 vUv;
+    void main(){
+      vec2 d=vUv-0.5;float dist=dot(d,d);float o=uStr*dist;
+      gl_FragColor=vec4(
+        texture2D(tDiffuse,vUv+d*o).r,
+        texture2D(tDiffuse,vUv).g,
+        texture2D(tDiffuse,vUv-d*o).b,
+        1.0
+      );
+    }
+  `,
 };
 const chromaPass = new ShaderPass(chromaShader);
 composer.addPass(chromaPass);
 
-// Scanline + vignette
-const scanShader = {
-  uniforms: { tDiffuse:{value:null}, uTime:{value:0}, uScanIntensity:{value:0.03}, uVignette:{value:0.4} },
-  vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-  fragmentShader:`
-    uniform sampler2D tDiffuse;uniform float uTime;uniform float uScanIntensity;uniform float uVignette;
-    varying vec2 vUv;
+const vigShader = {
+  uniforms: { tDiffuse:{value:null}, uDark:{value:0.55}, uTint:{value:new THREE.Color(0x050010)} },
+  vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;uniform float uDark;uniform vec3 uTint;varying vec2 vUv;
     void main(){
       vec4 c=texture2D(tDiffuse,vUv);
-      float scan=sin(vUv.y*400.0+uTime*5.0)*uScanIntensity;
-      c.rgb+=scan;
       vec2 uv=(vUv-0.5)*2.0;
-      float v=1.0-dot(uv,uv)*uVignette;
-      c.rgb*=clamp(v,0.0,1.0);
-      c.rgb=mix(c.rgb,vec3(dot(c.rgb,vec3(0.299,0.587,0.114))),0.05);
+      float v=1.0-dot(uv,uv)*0.4;
+      v=clamp(pow(max(v,0.0),uDark),0.0,1.0);
+      c.rgb=mix(uTint,c.rgb,v);
       gl_FragColor=c;
     }
   `,
 };
-composer.addPass(new ShaderPass(scanShader));
+composer.addPass(new ShaderPass(vigShader));
 composer.addPass(new OutputPass());
 
 /* ═══════════════════════════════════════════════════════════════════════
-   VOICEOVER — Web Speech API (placeholder for ElevenLabs)
+   VOICEOVER — Web Speech API (drop-in for ElevenLabs later)
    ═══════════════════════════════════════════════════════════════════════ */
-
-let voiceReady = false;
-let selectedVoice = null;
-
-function initVoices() {
-  const voices = speechSynthesis.getVoices();
-  // Prefer a deep/dramatic English voice
-  selectedVoice = voices.find(v => /Daniel|Google UK Male|Samantha|Alex|Aaron/i.test(v.name) && /en/i.test(v.lang))
-    || voices.find(v => /en-(GB|US|AU)/i.test(v.lang) && !/female/i.test(v.name))
-    || voices.find(v => /en/i.test(v.lang))
-    || voices[0];
-  voiceReady = !!selectedVoice;
+let voice = null;
+function loadVoices() {
+  const vs = speechSynthesis.getVoices();
+  voice = vs.find(v => /Daniel|Google UK Male|Alex|Aaron/i.test(v.name) && /en/i.test(v.lang))
+    || vs.find(v => /en-(GB|US)/i.test(v.lang) && !/female/i.test(v.name))
+    || vs.find(v => /en/i.test(v.lang)) || vs[0];
 }
+speechSynthesis.onvoiceschanged = loadVoices;
+loadVoices();
 
-speechSynthesis.onvoiceschanged = initVoices;
-initVoices();
-
-function speak(text, rate = 0.92, pitch = 0.85) {
-  if (!voiceReady) return;
-  const utt = new SpeechSynthesisUtterance(text);
-  utt.voice = selectedVoice;
-  utt.rate = rate;
-  utt.pitch = pitch;
-  utt.volume = 1;
-  speechSynthesis.speak(utt);
+function speak(text, rate = 0.9, pitch = 0.8) {
+  if (!voice) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.voice = voice; u.rate = rate; u.pitch = pitch; u.volume = 1;
+  speechSynthesis.speak(u);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   EXPERIENCE ENGINE — orchestrates visuals + voice + timing
+   SCRIPT TIMELINE
    ═══════════════════════════════════════════════════════════════════════ */
+const cues = [
+  { t:0,   d:4.5, say:"Welcome to Day SIX of our journey.",
+    html:'Welcome to Day <span class="w f">SIX</span>',
+    sub:'of our journey.', mode:'intro', rate:0.82, pitch:0.7 },
 
-const titleEl = document.getElementById('title-text');
-const subEl = document.getElementById('subtitle-text');
-const vsBadge = document.getElementById('vs-badge');
+  { t:5.5, d:3.5, say:"ONE brand, crafted by human hands.",
+    html:'<span class="w h">ONE</span> brand',
+    sub:'crafted by human hands.', mode:'human', rate:0.9, pitch:0.85 },
+
+  { t:10, d:3, say:"ONE, generated by A.I.",
+    html:'<span class="w a">ONE</span> generated by A.I.',
+    sub:'', mode:'ai', rate:0.9, pitch:0.85 },
+
+  { t:14, d:4, say:"Same constraints. Same timeline.",
+    html:'Same constraints.<br/>Same timeline.',
+    sub:'', mode:'split', rate:1.0, pitch:0.95 },
+
+  { t:19, d:4.5, say:"We are watching, who survives the fire.",
+    html:'We are watching...<br/>who survives the <span class="w f">fire</span>.',
+    sub:'', mode:'fire', rate:0.78, pitch:0.65 },
+
+  { t:24.5, d:2.5, say:"To win, you need to PERFORM.",
+    html:'To win, you need to<br/><span class="w g">PERFORM</span>.',
+    sub:'', mode:'perform', rate:1.1, pitch:0.95 },
+
+  { t:28, d:5, say:"Three channels. Google. Meta. Email.",
+    html:'Three channels.<br/><span class="a">Google.</span> <span class="a">Meta.</span> <span class="a">Email.</span>',
+    sub:'', mode:'channels', rate:1.08, pitch:0.95 },
+
+  { t:34, d:4, say:"Same creative volume. Same spend. Same conditions.",
+    html:'Same creative volume.<br/>Same spend. Same conditions.',
+    sub:'', mode:'equalise', rate:1.0, pitch:0.95 },
+
+  { t:39, d:4, say:"Both brands go head-to-head, across ALL THREE.",
+    html:'Both brands go <span class="f">head-to-head</span>...<br/>across <span class="w">ALL THREE</span>.',
+    sub:'', mode:'battle', rate:0.85, pitch:0.75 },
+
+  { t:44.5, d:3.5, say:"Category ONE is performance.",
+    html:'Category <span class="w g">ONE</span>',
+    sub:'is performance.', mode:'cat1', rate:0.9, pitch:0.85 },
+
+  { t:49, d:4, say:"HARD DATA. Clicks, conversions, results.",
+    html:'<span class="w num">HARD DATA.</span><br/>Clicks... conversions... results.',
+    sub:'', mode:'metrics', rate:0.9, pitch:0.85 },
+
+  { t:54, d:3.5, say:"The stuff that ACTUALLY pays the bills.",
+    html:'The stuff that <span class="g">ACTUALLY</span><br/>pays the bills.',
+    sub:'', mode:'metrics2', rate:0.88, pitch:0.82 },
+
+  { t:58.5, d:2, say:"No opinions. Just numbers.",
+    html:'No opinions.<br/><span class="w a num">Just numbers.</span>',
+    sub:'', mode:'numbers', rate:1.05, pitch:0.95 },
+
+  { t:62, d:2.5, say:"Category TWO?",
+    html:'<span class="l">Category TWO?</span>',
+    sub:'', mode:'mystery', rate:0.72, pitch:0.55 },
+
+  { t:65.5, d:4, say:"We're keeping THAT one, locked, for now.",
+    html:"We're keeping that one...<br/><span class=\"f\">locked</span>... for now.",
+    sub:'', mode:'locked', rate:0.9, pitch:0.85 },
+
+  { t:70.5, d:3.5, say:"It will reveal itself, when the time is right.",
+    html:'It will reveal itself...<br/>when the time is right.',
+    sub:'', mode:'reveal', rate:0.78, pitch:0.65 },
+
+  { t:75.5, d:3.5, say:"WE handle the operational data gathering.",
+    html:'<span class="w">WE</span> handle the operational<br/>data gathering.',
+    sub:'', mode:'operational', rate:0.9, pitch:0.85 },
+
+  { t:80, d:3, say:"But YOU, set the benchmark.",
+    html:'But <span class="w g">YOU</span> set the benchmark.',
+    sub:'', mode:'you', rate:0.9, pitch:0.85 },
+
+  { t:84, d:4, say:"What METRICS prove a brand is actually working?",
+    html:'What <span class="a">METRICS</span> prove<br/>a brand is actually working?',
+    sub:'', mode:'question', rate:0.88, pitch:0.82 },
+
+  { t:89, d:2.5, say:"Comment your thoughts below.",
+    html:'Comment your thoughts below.',
+    sub:'', mode:'cta', rate:0.9, pitch:0.85 },
+
+  { t:92.5, d:4, say:"See you again, soon.",
+    html:'See you again...<br/><span class="a">soon.</span>',
+    sub:'', mode:'outro', rate:0.85, pitch:0.8 },
+];
+
+const TOTAL = 98;
+
+/* ═══════════════════════════════════════════════════════════════════════
+   VISUAL STATE + MODE HANDLERS
+   ═══════════════════════════════════════════════════════════════════════ */
+const vs = {
+  morph: 0, fire: 0, converge: 0, emissive: 0,
+  emberIntensity: 0.4, emberMorph: 0, emberFire: 0, emberConverge: 0, emberDataMode: 0,
+  rainActive: 0,
+  bloomStr: 1.2, chromaStr: 0.003,
+  camX: 0, camY: 0, camZ: 40, camShake: 0,
+  bgR: 0.012, bgG: 0.012, bgB: 0.024,
+  humanLightI: 0, aiLightI: 0, fireLightI: 0,
+  ringVis: false, ring2Vis: false,
+  lockVis: false, qVis: false,
+  fieldScale: 1,
+};
+
+const mainText = document.getElementById('main-text');
+const subText = document.getElementById('sub-text');
+const vsEl = document.getElementById('vs');
 const hudEl = document.getElementById('hud');
-const metricsPrompt = document.getElementById('metrics-prompt');
-const progressFill = document.getElementById('progress-fill');
+const ctaEl = document.getElementById('cta');
+const progFill = document.getElementById('prog-fill');
 
-let startTime = 0;
-let running = false;
-let currentCueIndex = -1;
-let activeModes = new Set();
+function bars(gh,ga,mh,ma,eh,ea) {
+  document.getElementById('b-g-h').style.width = gh+'%';
+  document.getElementById('b-g-a').style.width = ga+'%';
+  document.getElementById('b-m-h').style.width = mh+'%';
+  document.getElementById('b-m-a').style.width = ma+'%';
+  document.getElementById('b-e-h').style.width = eh+'%';
+  document.getElementById('b-e-a').style.width = ea+'%';
+}
 
-// Visual state
-const vState = {
-  particleMode: 0,
-  particleIntensity: 0.5,
-  fireActive: 0,
-  dataActive: 0,
-  ringVisible: false,
-  lockVisible: false,
-  questionVisible: false,
-  cameraTarget: new THREE.Vector3(0, 0, 0),
-  cameraShake: 0,
-  bloomStrength: 0.8,
-  chromaStrength: 0.002,
-  bgColor: new THREE.Color(0x050508),
+function resetVS() {
+  vs.morph = 0; vs.fire = 0; vs.converge = 0; vs.emissive = 0;
+  vs.emberMorph = 0; vs.emberFire = 0; vs.emberConverge = 0; vs.emberDataMode = 0;
+  vs.rainActive = 0;
+  vs.camShake = 0;
+  vs.humanLightI = 0; vs.aiLightI = 0; vs.fireLightI = 0;
+  vs.ringVis = false; vs.ring2Vis = false;
+  vs.lockVis = false; vs.qVis = false;
+  vs.fieldScale = 1;
+  vs.bloomStr = 1.2; vs.chromaStr = 0.003;
+  vs.bgR = 0.012; vs.bgG = 0.012; vs.bgB = 0.024;
+  hudEl.classList.remove('on'); ctaEl.classList.remove('on');
+  vsEl.style.opacity = '0';
+  lockGrp.visible = false; qGrp.visible = false;
+  ringMesh.visible = false; ring2.visible = false;
+}
+
+const modes = {
+  intro()  { vs.emissive = 0.6; vs.bloomStr = 1.8; vs.camShake = 0.015; vs.emberIntensity = 0.6; },
+  human()  { vs.morph = 0.3; vs.emberMorph = 0.3; vs.humanLightI = 4; vs.camX = -4; },
+  ai()     { vs.morph = 0.3; vs.emberMorph = 0.3; vs.aiLightI = 4; vs.camX = 4; },
+  split()  { vs.morph = 0.8; vs.emberMorph = 0.8; vs.humanLightI = 2.5; vs.aiLightI = 2.5; vs.camX = 0; vs.ringVis = true; },
+  fire()   { vs.fire = 1; vs.emberFire = 1; vs.fireLightI = 6; vs.bloomStr = 2.2; vs.chromaStr = 0.012; vs.camShake = 0.06; vs.bgR = 0.04; },
+  perform(){ vsEl.style.opacity = '1'; setTimeout(() => vsEl.style.opacity = '0', 1800); vs.camShake = 0.03; vs.bloomStr = 1.8; vs.emissive = 0.8; },
+  channels(){ vs.rainActive = 0.7; vs.emberDataMode = 0.4; hudEl.classList.add('on'); bars(42,38,55,48,40,45); vs.ringVis = true; vs.ring2Vis = true; },
+  equalise(){ vs.rainActive = 0.5; hudEl.classList.add('on'); bars(50,50,50,50,50,50); vs.emberDataMode = 0.6; },
+  battle() { vs.fire = 0.5; vs.emberFire = 0.4; vs.morph = 0.6; vs.emberMorph = 0.5; vs.fireLightI = 3; vs.humanLightI = 2; vs.aiLightI = 2; hudEl.classList.add('on'); bars(68,58,72,62,52,58); vs.bloomStr = 1.6; vs.ringVis = true; vs.ring2Vis = true; },
+  cat1()   { vs.rainActive = 0.8; vs.emberDataMode = 0.5; vs.bloomStr = 1.0; hudEl.classList.add('on'); },
+  metrics(){ vs.rainActive = 1; vs.emberDataMode = 0.8; hudEl.classList.add('on'); bars(75,65,80,68,58,70); vs.emissive = 0.3; },
+  metrics2(){ vs.rainActive = 0.9; vs.emberDataMode = 0.7; hudEl.classList.add('on'); },
+  numbers(){ vs.rainActive = 1; vs.emberDataMode = 1; vs.bloomStr = 0.8; vs.chromaStr = 0.005; vs.bgR = 0.02; vs.bgG = 0.02; vs.bgB = 0.04; },
+  mystery(){ vs.emberIntensity = 0.25; vs.bloomStr = 0.6; vs.qVis = true; vs.fieldScale = 0.5; },
+  locked() { vs.lockVis = true; vs.qVis = false; vs.fireLightI = 2; vs.chromaStr = 0.006; vs.fire = 0.2; vs.emberFire = 0.15; },
+  reveal() { vs.lockVis = false; vs.emberIntensity = 0.3; vs.bloomStr = 0.7; vs.fieldScale = 0.6; },
+  operational(){ vs.rainActive = 0.5; vs.emberDataMode = 0.4; vs.emberIntensity = 0.5; },
+  you()    { vs.converge = 0.6; vs.emberConverge = 0.5; vs.bloomStr = 1.8; vs.emissive = 1.0; vs.emberIntensity = 1.0; vs.camZ = 32; },
+  question(){ vs.qVis = true; vs.bloomStr = 1.2; vs.emissive = 0.4; vs.fieldScale = 0.7; },
+  cta()    { ctaEl.classList.add('on'); vs.qVis = false; vs.emberIntensity = 0.4; vs.bloomStr = 0.9; },
+  outro()  { vs.emberIntensity = 0.2; vs.bloomStr = 0.6; vs.fieldScale = 0.8; ctaEl.classList.remove('on'); hudEl.classList.remove('on'); },
 };
 
-// Mode-to-visual mapping
-const modeVisuals = {
-  'intro': () => {
-    vState.particleIntensity = 0.8;
-    vState.bloomStrength = 1.2;
-    vState.cameraShake = 0.02;
-  },
-  'human-side': () => {
-    vState.particleMode = 1;
-    humanLight.intensity = 3;
-    aiLight.intensity = 0;
-    camera.position.x = -3;
-  },
-  'ai-side': () => {
-    vState.particleMode = 2;
-    humanLight.intensity = 0;
-    aiLight.intensity = 3;
-    camera.position.x = 3;
-  },
-  'split': () => {
-    vState.particleMode = 3;
-    humanLight.intensity = 2;
-    aiLight.intensity = 2;
-    camera.position.x = 0;
-    ring.visible = true;
-    vState.ringVisible = true;
-  },
-  'fire': () => {
-    vState.fireActive = 1;
-    vState.particleMode = 5;
-    fireLight.intensity = 5;
-    vState.bloomStrength = 1.8;
-    vState.chromaStrength = 0.008;
-    vState.cameraShake = 0.05;
-    titleEl.classList.add('glitch');
-    setTimeout(() => titleEl.classList.remove('glitch'), 150);
-  },
-  'versus': () => {
-    vsBadge.style.opacity = '1';
-    vState.cameraShake = 0.04;
-    vState.chromaStrength = 0.006;
-    setTimeout(() => { vsBadge.style.opacity = '0'; }, 2000);
-  },
-  'channels': () => {
-    hudEl.classList.add('visible');
-    vState.dataActive = 0.5;
-    ring.visible = true;
-    // Animate bars
-    animateBars(40, 35, 55, 50, 45, 40);
-  },
-  'equalise': () => {
-    animateBars(50, 50, 50, 50, 50, 50);
-    vState.particleMode = 7;
-  },
-  'battle': () => {
-    vState.fireActive = 0.6;
-    vState.particleMode = 7;
-    vState.bloomStrength = 1.5;
-    vState.cameraShake = 0.03;
-    fireLight.intensity = 3;
-    animateBars(65, 58, 72, 60, 48, 55);
-  },
-  'data-reveal': () => {
-    vState.dataActive = 1;
-    vState.particleMode = 8;
-    hudEl.classList.add('visible');
-  },
-  'metrics': () => {
-    vState.dataActive = 1;
-    vState.particleMode = 8;
-    animateBars(78, 65, 82, 70, 60, 72);
-  },
-  'numbers': () => {
-    vState.dataActive = 1;
-    vState.chromaStrength = 0.004;
-    vState.bgColor.set(0x080810);
-  },
-  'mystery': () => {
-    vState.particleIntensity = 0.3;
-    vState.bloomStrength = 0.5;
-    qGroup.visible = true;
-    vState.questionVisible = true;
-    hudEl.classList.remove('visible');
-  },
-  'locked': () => {
-    lockGroup.visible = true;
-    vState.lockVisible = true;
-    qGroup.visible = false;
-    vState.questionVisible = false;
-    vState.chromaStrength = 0.005;
-    fireLight.intensity = 2;
-  },
-  'mystery-fade': () => {
-    lockGroup.visible = false;
-    vState.lockVisible = false;
-    vState.particleIntensity = 0.4;
-    vState.bloomStrength = 0.6;
-  },
-  'operational': () => {
-    vState.dataActive = 0.6;
-    vState.particleMode = 8;
-    vState.particleIntensity = 0.6;
-  },
-  'you': () => {
-    vState.particleIntensity = 1.0;
-    vState.bloomStrength = 1.4;
-    vState.particleMode = 10;
-    camera.position.z = 25;
-  },
-  'question': () => {
-    qGroup.visible = true;
-    vState.questionVisible = true;
-    vState.bloomStrength = 1.0;
-  },
-  'cta': () => {
-    metricsPrompt.classList.add('visible');
-    qGroup.visible = false;
-    vState.questionVisible = false;
-  },
-  'outro': () => {
-    vState.particleIntensity = 0.3;
-    vState.fireActive = 0;
-    vState.dataActive = 0;
-    fireLight.intensity = 0;
-    humanLight.intensity = 0;
-    aiLight.intensity = 0;
-    vState.bloomStrength = 0.6;
-    metricsPrompt.classList.remove('visible');
-    hudEl.classList.remove('visible');
-  },
-};
+/* ═══════════════════════════════════════════════════════════════════════
+   EXPERIENCE ENGINE
+   ═══════════════════════════════════════════════════════════════════════ */
+let running = false, startT = 0, curCue = -1;
 
-function animateBars(gh, gai, mh, mai, eh, eai) {
-  document.getElementById('bar-g-h').style.width = gh+'%';
-  document.getElementById('bar-g-a').style.width = gai+'%';
-  document.getElementById('bar-m-h').style.width = mh+'%';
-  document.getElementById('bar-m-a').style.width = mai+'%';
-  document.getElementById('bar-e-h').style.width = eh+'%';
-  document.getElementById('bar-e-a').style.width = eai+'%';
+function fireCue(c) {
+  resetVS();
+  mainText.innerHTML = c.html;
+  mainText.classList.add('on');
+  if (c.sub) { subText.textContent = c.sub; subText.classList.add('on'); }
+  else subText.classList.remove('on');
+  speak(c.say, c.rate, c.pitch);
+  if (modes[c.mode]) modes[c.mode]();
+  // Fade out near end
+  setTimeout(() => { mainText.classList.remove('on'); subText.classList.remove('on'); }, c.d * 1000 - 600);
 }
 
-function resetVisuals() {
-  vState.particleMode = 0;
-  vState.particleIntensity = 0.5;
-  vState.fireActive = 0;
-  vState.dataActive = 0;
-  vState.cameraShake = 0;
-  vState.bloomStrength = 0.8;
-  vState.chromaStrength = 0.002;
-  vState.bgColor.set(0x050508);
-  fireLight.intensity = 0;
-  humanLight.intensity = 0;
-  aiLight.intensity = 0;
-  ring.visible = false;
-  lockGroup.visible = false;
-  qGroup.visible = false;
-  vState.ringVisible = false;
-  vState.lockVisible = false;
-  vState.questionVisible = false;
-}
-
-function triggerCue(cue) {
-  resetVisuals();
-
-  // Set text
-  titleEl.innerHTML = cue.html;
-  titleEl.classList.add('visible');
-  if (cue.sub) {
-    subEl.textContent = cue.sub;
-    subEl.classList.add('visible');
-  } else {
-    subEl.classList.remove('visible');
-  }
-
-  // Speak
-  const rateMap = { dramatic:0.85, calm:0.92, 'matter-of-fact':1.0, awe:0.8, fast:1.1, reflective:0.88, deadpan:1.05, whisper:0.75 };
-  const pitchMap = { dramatic:0.75, calm:0.9, 'matter-of-fact':1.0, awe:0.7, fast:1.0, reflective:0.85, deadpan:0.95, whisper:0.6 };
-  speak(cue.speak, rateMap[cue.tone] || 0.92, pitchMap[cue.tone] || 0.85);
-
-  // Apply visual mode
-  if (modeVisuals[cue.mode]) modeVisuals[cue.mode]();
-
-  // Schedule text fade-out
-  setTimeout(() => {
-    titleEl.classList.remove('visible');
-    subEl.classList.remove('visible');
-  }, cue.dur * 1000 - 500);
-}
-
-function startExperience() {
-  document.getElementById('start-btn').classList.add('hidden');
-  startTime = performance.now() / 1000;
-  running = true;
-  currentCueIndex = -1;
+function go() {
+  document.getElementById('start').classList.add('off');
+  startT = performance.now() / 1000;
+  running = true; curCue = -1;
   speechSynthesis.cancel();
 }
-
-document.getElementById('start-btn').addEventListener('click', startExperience);
+document.getElementById('start').addEventListener('click', go);
 
 /* ═══════════════════════════════════════════════════════════════════════
-   ANIMATION LOOP
+   RENDER LOOP
    ═══════════════════════════════════════════════════════════════════════ */
-
 const clock = new THREE.Clock();
+const lerp = (a, b, t) => a + (b - a) * t;
 
 function animate() {
   requestAnimationFrame(animate);
   const t = clock.getElapsedTime();
-  const dt = clock.getDelta();
+  const dt = Math.min(clock.getDelta(), 0.05);
 
   if (running) {
-    const elapsed = performance.now() / 1000 - startTime;
-    const progress = Math.min(elapsed / TOTAL_DURATION, 1);
-    progressFill.style.width = (progress * 100) + '%';
-
-    // Fire cues
-    for (let i = 0; i < script.length; i++) {
-      if (elapsed >= script[i].t && elapsed < script[i].t + script[i].dur && i !== currentCueIndex) {
-        currentCueIndex = i;
-        triggerCue(script[i]);
-        break;
+    const el = performance.now() / 1000 - startT;
+    progFill.style.width = (Math.min(el / TOTAL, 1) * 100) + '%';
+    for (let i = 0; i < cues.length; i++) {
+      if (el >= cues[i].t && el < cues[i].t + cues[i].d && i !== curCue) {
+        curCue = i;
+        fireCue(cues[i]);
       }
     }
-
-    // End of experience
-    if (elapsed >= TOTAL_DURATION) {
-      running = false;
-      titleEl.innerHTML = '';
-      titleEl.classList.remove('visible');
-    }
+    if (el >= TOTAL) { running = false; resetVS(); mainText.classList.remove('on'); }
   }
 
-  // Update particle uniforms
-  particleMat.uniforms.uTime.value = t;
-  particleMat.uniforms.uMode.value += (vState.particleMode - particleMat.uniforms.uMode.value) * 0.05;
-  particleMat.uniforms.uIntensity.value += (vState.particleIntensity - particleMat.uniforms.uIntensity.value) * 0.05;
+  const sp = 0.04; // smoothing speed
 
-  // Fire particles
-  fireMat.uniforms.uTime.value = t;
-  fireMat.uniforms.uActive.value += (vState.fireActive - fireMat.uniforms.uActive.value) * 0.08;
+  // ── Field uniforms ──────────────────────────────────────────────
+  fieldUniforms.uTime.value = t;
+  fieldUniforms.uMorph.value = lerp(fieldUniforms.uMorph.value, vs.morph, sp);
+  fieldUniforms.uFireIntensity.value = lerp(fieldUniforms.uFireIntensity.value, vs.fire, sp);
+  fieldUniforms.uConverge.value = lerp(fieldUniforms.uConverge.value, vs.converge, sp);
+  fieldUniforms.uEmissive.value = lerp(fieldUniforms.uEmissive.value, vs.emissive, sp);
 
-  // Data particles
-  dataMat.uniforms.uTime.value = t;
-  dataMat.uniforms.uActive.value += (vState.dataActive - dataMat.uniforms.uActive.value) * 0.06;
+  // Field scale
+  const ts = lerp(field.scale.x, vs.fieldScale, sp);
+  field.scale.setScalar(ts);
+  field.rotation.y += dt * 0.08;
+  field.rotation.x = Math.sin(t * 0.1) * 0.15;
 
-  // Ring animation
-  if (ring.visible) {
-    ring.rotation.z += dt * 0.3;
-    ring.scale.setScalar(1 + Math.sin(t * 2) * 0.05);
-    ringMat.emissiveIntensity = 0.3 + Math.sin(t * 3) * 0.2;
+  // ── Ember uniforms ──────────────────────────────────────────────
+  emberMat.uniforms.uTime.value = t;
+  emberMat.uniforms.uIntensity.value = lerp(emberMat.uniforms.uIntensity.value, vs.emberIntensity, sp);
+  emberMat.uniforms.uMorph.value = lerp(emberMat.uniforms.uMorph.value, vs.emberMorph, sp);
+  emberMat.uniforms.uFire.value = lerp(emberMat.uniforms.uFire.value, vs.emberFire, sp);
+  emberMat.uniforms.uConverge.value = lerp(emberMat.uniforms.uConverge.value, vs.emberConverge, sp);
+  emberMat.uniforms.uDataMode.value = lerp(emberMat.uniforms.uDataMode.value, vs.emberDataMode, sp);
+
+  // ── Rain ────────────────────────────────────────────────────────
+  rainMat.uniforms.uTime.value = t;
+  rainMat.uniforms.uActive.value = lerp(rainMat.uniforms.uActive.value, vs.rainActive, sp);
+
+  // ── Geometric objects ───────────────────────────────────────────
+  ringMesh.visible = vs.ringVis;
+  ring2.visible = vs.ring2Vis;
+  if (ringMesh.visible) { ringMesh.rotation.z += dt * 0.2; ringMat.emissiveIntensity = 0.4 + Math.sin(t * 2) * 0.2; }
+  if (ring2.visible) { ring2.rotation.z -= dt * 0.15; }
+
+  lockGrp.visible = vs.lockVis;
+  if (lockGrp.visible) {
+    lockGrp.rotation.y += dt * 0.4;
+    lockGrp.position.y = Math.sin(t * 1.2) * 0.6;
+    lockBodyMat.emissiveIntensity = 0.6 + Math.sin(t * 3) * 0.3;
   }
 
-  // Lock rotation
-  if (lockGroup.visible) {
-    lockGroup.rotation.y += dt * 0.5;
-    lockGroup.position.y = Math.sin(t * 1.5) * 0.5;
+  qGrp.visible = vs.qVis;
+  if (qGrp.visible) {
+    qGrp.rotation.y += dt * 0.25;
+    qGrp.position.y = Math.sin(t * 0.8) * 1.0;
+    qGrp.scale.setScalar(1 + Math.sin(t * 1.5) * 0.08);
   }
 
-  // Question mark float
-  if (qGroup.visible) {
-    qGroup.rotation.y += dt * 0.3;
-    qGroup.position.y = Math.sin(t * 1.2) * 0.8;
-    qGroup.scale.setScalar(1 + Math.sin(t * 2) * 0.1);
+  // ── Camera ──────────────────────────────────────────────────────
+  camera.position.x = lerp(camera.position.x, vs.camX + Math.sin(t * 0.12) * 2, sp);
+  camera.position.y = lerp(camera.position.y, vs.camY + Math.sin(t * 0.15) * 1.5, sp);
+  camera.position.z = lerp(camera.position.z, vs.camZ + Math.sin(t * 0.1) * 2, sp);
+  if (vs.camShake > 0.001) {
+    camera.position.x += (Math.random() - 0.5) * vs.camShake * 2;
+    camera.position.y += (Math.random() - 0.5) * vs.camShake * 2;
+    vs.camShake *= 0.97;
   }
-
-  // Camera
-  const targetZ = 30 + Math.sin(t * 0.15) * 3;
-  camera.position.z += (targetZ - camera.position.z) * 0.02;
-  camera.position.y = Math.sin(t * 0.2) * 1.5;
-
-  // Camera shake
-  if (vState.cameraShake > 0) {
-    camera.position.x += (Math.random() - 0.5) * vState.cameraShake;
-    camera.position.y += (Math.random() - 0.5) * vState.cameraShake;
-    vState.cameraShake *= 0.98;
-  }
-
   camera.lookAt(0, 0, 0);
 
-  // Background colour lerp
-  scene.background.lerp(vState.bgColor, 0.05);
+  // ── Lights ──────────────────────────────────────────────────────
+  humanLight.intensity = lerp(humanLight.intensity, vs.humanLightI, sp);
+  aiLight.intensity = lerp(aiLight.intensity, vs.aiLightI, sp);
+  fireLight.intensity = lerp(fireLight.intensity, vs.fireLightI, sp);
 
-  // Post-processing
-  bloom.strength += (vState.bloomStrength - bloom.strength) * 0.05;
-  chromaPass.uniforms.uStrength.value += (vState.chromaStrength - chromaPass.uniforms.uStrength.value) * 0.05;
-  scanShader.uniforms.uTime.value = t;
+  // ── Background ──────────────────────────────────────────────────
+  scene.background.r = lerp(scene.background.r, vs.bgR, sp);
+  scene.background.g = lerp(scene.background.g, vs.bgG, sp);
+  scene.background.b = lerp(scene.background.b, vs.bgB, sp);
+
+  // ── Post-processing ────────────────────────────────────────────
+  bloom.strength = lerp(bloom.strength, vs.bloomStr, sp);
+  chromaPass.uniforms.uStr.value = lerp(chromaPass.uniforms.uStr.value, vs.chromaStr, sp);
 
   composer.render();
 }
-
 animate();
 
 /* ═══ Resize ═══ */
-let resizeTimer;
+let rT;
 window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    const w = window.innerWidth, h = window.innerHeight;
-    camera.aspect = w / h;
+  clearTimeout(rT);
+  rT = setTimeout(() => {
+    camera.aspect = W() / H();
     camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
-    composer.setSize(w, h);
+    renderer.setSize(W(), H());
+    composer.setSize(W(), H());
   }, 150);
 });
-
-console.log('[Artist vs Agent] Loaded — click to begin');
 </script>
 </body>
 </html>
