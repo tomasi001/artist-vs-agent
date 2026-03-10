@@ -118,7 +118,11 @@ import{UnrealBloomPass}from'three/addons/postprocessing/UnrealBloomPass.js';
 import{ShaderPass}from'three/addons/postprocessing/ShaderPass.js';
 import{OutputPass}from'three/addons/postprocessing/OutputPass.js';
 
+console.log('[AvA] Module loaded');
+
 const W=()=>innerWidth,H=()=>innerHeight;
+
+try {
 
 /* ═══ RENDERER ═══ */
 const cv=document.getElementById('gl');
@@ -140,9 +144,9 @@ const ORG_V=`
 uniform float uTime,uMorph,uFire,uConverge,uExplode,uPulse,uScale;
 varying vec3 vN,vW;varying float vFr,vNoise,vSide;
 
-vec3 mod289(vec3 x){return x-floor(x/289.0)*289.0;}
-vec4 mod289(vec4 x){return x-floor(x/289.0)*289.0;}
-vec4 perm(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+vec3 mod289v3(vec3 x){return x-floor(x/289.0)*289.0;}
+vec4 mod289v4(vec4 x){return x-floor(x/289.0)*289.0;}
+vec4 perm(vec4 x){return mod289v4(((x*34.0)+1.0)*x);}
 float n3(vec3 p){
   vec3 a=floor(p),d=p-a;d*=d*(3.0-2.0*d);
   vec4 b=a.xxyy+vec4(0,1,0,1),k1=perm(b.xyxy),k2=perm(k1.xyxy+b.zzww);
@@ -251,7 +255,7 @@ const orgU={
 };
 
 const org=new THREE.Mesh(
-  new THREE.IcosahedronGeometry(5,80),
+  new THREE.IcosahedronGeometry(5,48),
   new THREE.ShaderMaterial({uniforms:orgU,vertexShader:ORG_V,fragmentShader:ORG_F,side:THREE.DoubleSide})
 );
 S.add(org);
@@ -625,6 +629,12 @@ anim();
 let rT;window.addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(()=>{
   cam.aspect=W()/H();cam.updateProjectionMatrix();R.setSize(W(),H());comp.setSize(W(),H());
 },150);});
+
+console.log('[AvA] Fully initialised');
+} catch(err) {
+  console.error('[AvA] Init error:', err);
+  document.getElementById('go').innerHTML = '<h1 style="color:red">Error</h1><p style="color:#fff;font-size:14px;margin-top:12px">'+err.message+'</p>';
+}
 </script>
 </body>
 </html>
